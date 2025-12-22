@@ -1,0 +1,3 @@
+# Ignore the vault password file everywhere
+.vault_pass
+*.vault_pass

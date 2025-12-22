@@ -1,11 +1,7 @@
-- import_tasks: passwordless.yml
-  tags: passwordless
-
-- import_tasks: systemd.yml
-  tags: systemd
-
 - import_tasks: subscription_register.yml
   tags: register
 
+- import_tasks: systemd.yml
+  tags: systemd
 
 
