@@ -1,0 +1,103 @@
+  #--------------------
+  #   PREBUILD BINARIES
+  # -------------------
+- name: Deploy other binaries
+  copy:
+    src: "{{ ansible_env.HOME }}/Lab/bin/rhel/{{ item }}"
+    dest: "{{ ansible_env.HOME  }}/bin"
+    mode: '0755'
+    remote_src: true
+  loop: "{{ binaries }}"
+  tags: binaries
+ 
+  #--------------------
+  #        ST
+  # -------------------
+- name: Compile and install st terminal
+  command: make clean install
+  args:
+    chdir: "/home/{{ user_name }}/.config/st"
+  become: true        
+  tags: st
+
+  #--------------------
+  #      DMENU
+  # -------------------
+- name: Compile and install dmenu
+  command: make clean install
+  args:
+    chdir: "/home/{{ user_name }}/.config/dmenu"
+  become: true        
+  tags: dmenu        
+
+  #--------------------
+  #   FERRIS
+  # -------------------
+- name: Build, deploy Ferris
+  command: make install
+  args:
+    chdir: "{{ ansible_env.HOME }}/Git/ferris"
+  tags: ferris
+
+  #--------------------
+  #   JOPLIN
+  # -------------------
+- name: Install Joplin via npm
+  shell: |
+    NPM_CONFIG_PREFIX=$HOME/bin/joplin npm install --loglevel=error -g joplin
+  args:
+    creates: "{{ ansible_env.HOME }}/bin/joplin/bin/joplin" # avoid reinstalling
+  tags: joplin
+
+
+- name: Sync Joplin
+  shell: |
+    export NVM_DIR="{{ ansible_env.HOME }}/.nvm"
+    [ -s "$NVM_DIR/nvm.sh" ] && source "$NVM_DIR/nvm.sh"
+    {{ ansible_env.HOME }}/bin/joplin/bin/joplin config sync.target 9
+    {{ ansible_env.HOME }}/bin/joplin/bin/joplin config sync.9.path http://web:22300
+    {{ ansible_env.HOME }}/bin/joplin/bin/joplin config sync.9.username "{{ joplin_username }}"
+    {{ ansible_env.HOME }}/bin/joplin/bin/joplin config sync.9.password "{{ joplin_password }}"
+    {{ ansible_env.HOME }}/bin/joplin/bin/joplin sync
+  args:
+    executable: /bin/bash
+  tags: joplin_sync
+  
+
+  #--------------------
+  #   CALCURSE
+  # -------------------
+- name: Install Calcurse
+  shell: |
+    ./configure
+    make
+    make install
+  become: yes
+  args:
+    chdir: "{{ user_home }}/Lab/packages/calcurse-4.8.2"
+  tags: calcurse
+
+  
+- name: Configure Calcurse
+  command: |
+    calcurse-caldav --init=two-way
+  tags: calcurse
+  
+  #--------------------
+  #   GPASS
+  # -------------------
+- name: Deploy Gpass
+  copy:
+    src: "{{ ansible_env.HOME }}/Lab/gpass.json"
+    dest: "{{ ansible_env.HOME }}"
+    remote_src: true
+  tags: gpass
+    
+
+
+  #--------------------
+  #   INSTALL YAZI
+  # -------------------
+- name: Install Yazi
+  command: cargo install --force yazi-build
+  tags: yazi

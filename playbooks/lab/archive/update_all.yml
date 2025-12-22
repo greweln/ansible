@@ -1,0 +1,12 @@
+---
+
+- name: Update all hosts
+  hosts: all
+  vars:
+    ansible_ssh_extra_args: '-o StrictHostKeyChecking=no'
+  tasks:
+    - name: Update all hosts
+      dnf:
+        name: '*'
+        state: latest
+        update_cache: yes

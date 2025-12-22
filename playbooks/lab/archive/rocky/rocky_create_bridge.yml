@@ -1,0 +1,61 @@
+---
+- name: Setup matrix server
+  hosts: matrix
+  become: true
+  vars:
+    ansible_ssh_extra_args: '-o StrictHostKeyChecking=no'
+    bridge_ip: "192.168.1.3/24"
+    bridge_gateway: "192.168.1.1"
+    bridge_dns: "192.168.1.1"
+  tasks:
+
+    # Get the active network interface
+    - name: Find the active network interface
+      command: nmcli -t -f NAME con show --active
+      register: nmcli_active_interface
+      changed_when: false  # Avoids marking the task as changed unnecessarily
+
+    # Store the active interface name in a reusable variable 
+    - name: Store the active interface name
+      set_fact:
+        active_interface: "{{ nmcli_active_interface.stdout.splitlines()[0] }}"
+      when: nmcli_active_interface.stdout != ""
+
+    # Debug the active interface (for logging purposes)
+    - name: Log the active interface
+      debug:
+        msg: "Active interface is {{ active_interface }}"
+      when: active_interface is defined
+
+    # Create the bridge interface br0
+    - name: Create bridge interface br0
+      nmcli:
+        type: bridge
+        conn_name: br0
+        ifname: br0
+        ip4: "{{ bridge_ip }}" 
+        gw4: "{{ bridge_gateway }}" 
+        dns4: "{{ bridge_dns }}"
+        method4: manual
+        state: present #?
+      when: active_interface is defined
+
+    # Add the active interface as a slave to the bridge br0
+    - name: Add {{ active_interface }} as a slave to br0
+      nmcli:
+        type: bridge-slave
+        ifname: "{{ active_interface }}"  
+        conn_name: "{{ active_interface }}-slave"
+        master: br0
+        state: present #?
+      when: active_interface is defined
+
+    - name: Bring up the bridge interface
+      command: nmcli conn up br0
+
+    - name: Bring down the active interface
+      command: nmcli conn down "{{ active_interface }}"    
+      when: active_interface is defined
+
+    - name: Terminate the playbook
+      meta: end_play

@@ -1,0 +1,68 @@
+epel_repo:
+  - "https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm"
+
+rpmfusion_repos:
+  - "https://mirrors.rpmfusion.org/free/el/rpmfusion-free-release-{{ ansible_distribution_major_version}}.noarch.rpm"
+  - "https://mirrors.rpmfusion.org/nonfree/el/rpmfusion-nonfree-release-{{ansible_distribution_major_version }}.noarch.rpm"
+
+
+system_packages:  
+  - "@base-x"
+  - git
+  - bluez
+  - curl
+  - NetworkManager-wifi
+  - samba-client
+  - cifs-utils
+  - nfs-utils
+  - python3-pip
+  - lshw
+  - tar
+  - gcc
+  - cmake
+  - ncurses-devel
+
+user_packages:
+  - firefox
+  - bat
+  - xmodmap              # keyboard keys customizition
+  - xrandr               # monitors setup
+  - xrdb                 # load Xresources
+  - ripgrep
+  - maim                 # screenshots
+  - mpv
+  - mpd                  # RPM Fusion
+  - brightnessctl
+  - tree
+  - usbutils             # lsusb
+  - helix
+  - imlib2               # feh req
+  - i3lock
+  - xsetroot             # cursor shape
+  - xinput               # touchpad
+  - xset
+  - xclip                # copy clipboard
+  - xcb-util-image       # dep. xwallpaper
+  - libXpm               # ---- || -------
+  - libXinerama-devel    # dmenu
+  - python3-httplib2     # calcurse caldav sync
+  - libatomic            # req for nodejs
+  - libXinerama-devel    # req st
+  - openssl-devel        # ferris depend
+  - libXft-devel         # ferris depend
+  - libX11-devel         # ferris depend
+
+
+  
+nodejs_packages:
+  - pyright
+  - bash-language-server
+
+cargo_packages:
+  - vivid
+  - rmpc
+  - lsd
+
+rust_env:
+  PATH: "{{ ansible_env.HOME }}/.cargo/bin:{{ ansible_env.PATH }}"
+

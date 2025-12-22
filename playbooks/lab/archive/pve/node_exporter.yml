@@ -1,0 +1,29 @@
+---
+
+- name: Deploy and setup Node Exporter on all lab
+  hosts: all
+  remote_user: root
+  vars:      
+    ansible_ssh_extra_args: '-o StrictHostKeyChecking=no'
+  tasks:
+    - name: Deploy the binary
+      copy:
+         src: /home/me/Lab/bin/node_exporter
+         dest: /usr/bin/
+         mode: '0755' 
+
+    - name: Depoly systemd unit file
+      copy:
+        src: /home/me/Git/configs/servers/systemd/node_exporter.service
+        dest: /etc/systemd/system
+        
+    - name: Reload systemd units
+      command:
+        systemctl daemon-reload
+        
+        
+    - name: Enable & start the service
+      service:
+        name: node_exporter
+        state: started
+        enabled: yes

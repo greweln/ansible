@@ -1,0 +1,22 @@
+# Aliases
+alias rm='rm -i'
+alias cp='cp -i'
+alias mv='mv -i'
+alias l='lsd -l'
+alias ll='lsd -la'
+alias c='clear'
+alias bat='bat --theme base16'
+
+# Define colors
+YELLOW_BOLD='\[\e[1;33m\]'   # Corrected yellow bold
+GREY='\[\e[0;90m\]'          # Grey
+GREY_BOLD='\[\e[1;90m\]'     # Grey bold
+CYAN_BOLD='\[\e[1;36m\]'     # Corrected cyan bold
+RESET='\[\e[0m\]'            # Reset
+
+
+# Define PS1
+PS1="${CYAN_BOLD}[\h]${GREY}:(\w):${RESET} "
+
+export EDITOR=hx
+LS_COLORS="$(vivid generate rust)"

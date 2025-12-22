@@ -1,0 +1,22 @@
+matrix ansible_host=matrix ansible_user=root
+
+zion ansible_host=127.0.0.1 ansible_connection=local
+
+tpad ansible_host=192.168.1.43 ansible_user=me
+
+web ansible_host=web ansible_user=root
+
+[odroids]
+matrix
+zion
+
+
+[physical]
+matrix
+zion
+tpad
+
+[virtual]
+web
+
+

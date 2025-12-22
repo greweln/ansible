@@ -1,0 +1,63 @@
+---
+- name: Configure Matrix
+  hosts: matrix
+  vars:
+    files:
+      - src: /root/configs/lab/.bashrc
+        dest: /root
+      - src: /root/configs/lab/.bash_profile
+        dest: /root
+      - src: /root/configs/lab/.profile
+        dest: /root
+      - src: /root/configs/tpad/helix
+        dest: /root/.config/
+      - src: /root/configs/tpad/lsd
+        dest: /root/.config/
+      - src: /root/configs/tpad/vivid
+        dest: /root/.config/
+
+    packages:
+      - hx
+      - ripgrep
+      - bat
+      - lsd
+      - vivid
+
+    dirs:
+      - /root/.config
+      - /root/bin
+
+  tasks:
+    - name: Update resolv.conf
+      lineinfile:
+        path: /etc/resolv.conf
+        regexp: '^nameserver'
+        line: 'nameserver 192.168.1.2'
+        state: present
+      tags: dns
+
+    - name: Restart the network service
+      systemd:
+        name: networking
+        state: restarted
+      tags: dns
+      
+    - name: Install packages
+      package:
+        name: "{{ packages }}"
+        state: present
+      tags: packages
+
+    - name: Create dirs
+      file:
+        path: "{{ item }}"
+      loop: "{{ dirs }}"
+      tags: dirs
+
+    - name: Deploy dots and config files
+      copy:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+      loop: "{{ files }}"
+      tags: files
+

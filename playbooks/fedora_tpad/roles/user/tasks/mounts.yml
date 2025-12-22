@@ -1,0 +1,34 @@
+- name: Create .smbcredentials used in fstab containig the creds stored in vault.
+  copy:
+    dest: "{{ ansible_env.HOME }}/.smbcredentials"
+    content: |
+      username={{ smb_username }}
+      password={{ smb_password }}
+    mode: '0600'
+  tags: smb_creds
+
+
+- name: Mount network shares
+  blockinfile:
+    path: /etc/fstab
+    marker: "# {mark} ANSIBLE MANAGED CIFS/NFS ENTRIES"
+    block: |
+       //192.168.1.2/documents  /home/{{ user_name }}/Documents  cifs credentials={{ ansible_env.HOME }}/.smbcredentials,uid=1000,gid=1000 0 0
+       //192.168.1.2/library    /home/{{ user_name }}/Library    cifs credentials={{ ansible_env.HOME }}/.smbcredentials,uid=1000,gid=1000 0 0
+       //192.168.1.2/music      /home/{{ user_name }}/Music      cifs credentials={{ ansible_env.HOME }}/.smbcredentials,uid=1000,gid=1000 0 0
+       //192.168.1.2/pictures   /home/{{ user_name }}/Pictures   cifs credentials={{ ansible_env.HOME }}/.smbcredentials,uid=1000,gid=1000 0 0
+       //192.168.1.2/videos     /home/{{ user_name }}/Videos     cifs credentials={{ ansible_env.HOME }}/.smbcredentials,uid=1000,gid=1000 0 0
+       //192.168.1.2/lab        /home/{{ user_name }}/Lab        cifs credentials={{ ansible_env.HOME }}/.smbcredentials,uid=1000,gid=1000 0 0
+  become: true
+  tags: fstab
+
+- name: Reload systemd
+  command: systemctl daemon-reload
+  become: true
+  tags: reload_systemd
+
+- name: Mount all filesystems (ignore errors)
+  command: mount -a
+  ignore_errors: yes
+  become: true
+  tags: mount

@@ -1,0 +1,133 @@
+---
+- name: Deploy Clink binaries
+  hosts: all
+  become: yes
+
+  vars:
+    repo: "greweln/clink"
+    tmp_dir: "/tmp/clink"
+    cache_file: ".cache/clink"
+
+  tasks:
+    - name: Install required extraction tools
+      package:
+        name: "{{ extraction_packages }}"
+        state: present
+        update_cache: yes
+      vars:
+        extraction_packages: >-
+          {% if ansible_facts.os_family == 'Debian' %}
+            tar, gzip, unzip
+          {% elif ansible_facts.os_family == 'RedHat' %}
+            tar, gzip, unzip
+          {% else %}
+            tar, gzip, unzip
+          {% endif %}
+
+
+    - name: Ensure temporary directory exists
+      file:
+        path: "{{ tmp_dir }}"
+        state: directory
+        mode: "0755"
+
+    - name: Query GitHub API for latest release
+      uri:
+        url: "https://api.github.com/repos/{{ repo }}/releases/latest"
+        return_content: yes
+      register: latest_release
+
+    - name: Filter glibc + musl assets
+      set_fact:
+        clink_assets: >-
+          {{
+            latest_release.json.assets
+            | selectattr('name', 'match', '.*glibc.*tar.gz')
+            | list
+            +
+            latest_release.json.assets
+            | selectattr('name', 'match', '.*musl.*tar.gz')
+            | list
+          }}
+
+    - name: Download glibc + musl archives
+      get_url:
+        url: "{{ item.browser_download_url }}"
+        dest: "{{ tmp_dir }}/{{ item.name }}"
+        mode: '0644'
+      loop: "{{ clink_assets }}"
+
+    - name: Extract downloaded archives
+      unarchive:
+        src: "{{ tmp_dir }}/{{ item.name }}"
+        dest: "{{ tmp_dir }}"
+        remote_src: true
+      loop: "{{ clink_assets }}"
+
+    - name: Ensure clink config directory exists
+      file:
+        path: "{{ ansible_env.HOME }}/.config/clink"
+        state: directory
+        mode: "0755"
+
+    - name: Copy config files for selected variant
+      copy:
+        src: "{{ tmp_dir }}/clink-glibc/{{ item }}"
+        dest: "{{ ansible_env.HOME }}/.config/clink/{{ item }}"
+        remote_src: true
+        mode: '0644'
+        force: no
+      loop:
+        - config.toml
+        - update_cache.py
+
+
+    - name: Test glibc binary
+      shell: timeout 1 {{ tmp_dir }}/clink-glibc/clink
+      register: test_glibc
+      ignore_errors: yes
+      changed_when: false
+      tags: test
+
+    - name: Select correct binary variant
+      set_fact:
+        clink_variant: "{{ 'clink-glibc' if not test_glibc.failed else 'clink-musl' }}"
+
+
+    - name: Install selected Clink binary
+      copy:
+        src: "{{ tmp_dir }}/{{ clink_variant }}/clink"
+        dest: /usr/local/bin
+        remote_src: true
+        mode: "0755"
+
+    - name: Set Clink as shell prompt
+      lineinfile:
+        path: "{{ ansible_env.HOME }}/.bashrc"
+        line: "PS1='$(clink)'"
+        insertafter: EOF
+        state: present
+      tags: ps1
+
+      
+
+    - name: Ensure ~/.cache/clink file exists
+      file:
+        path: "{{ ansible_env.HOME }}/{{ cache_file }}"
+        state: touch
+        mode: "0644"
+
+
+    - name: Configure Clink cronjob
+      cron:
+        name: Clink cronjob
+        user: "{{ ansible_env.USER }}"
+        minute: "*/5"
+        job: "/usr/bin/env python3 $HOME/.config/clink/update_cache.py"
+      tags: cron
+
+
+    - name: Remove temporary Clink directory
+      file:
+        path: "{{ tmp_dir }}"
+        state: absent

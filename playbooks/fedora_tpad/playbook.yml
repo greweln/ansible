@@ -1,0 +1,26 @@
+# KICKSTART:
+#   - hostname
+#   - dns
+#   - ip
+#   - user me wheel
+
+# TODO:
+# - github change key name(hostname_test)
+# - wifi
+
+---
+- name: Configure laptop
+  hosts: tpad
+  vars_files:
+    - vars/global.yml
+
+  roles:
+  - role: system
+    tags: system_settings
+
+  - role: packages
+    tags: install_packages
+
+ 
+  - role: user
+    tags: setup_user_env

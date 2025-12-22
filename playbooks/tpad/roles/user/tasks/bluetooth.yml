@@ -1,0 +1,24 @@
+- name: Start scanning
+  shell: bluetoothctl --timeout 5 scan on
+  tags: scan
+
+# - name: Wait for device discovery
+#   pause:
+#     seconds: 5
+
+- name: Pair, trust, and connect
+  shell: |
+   bluetoothctl pair {{ edifier_mac }}
+   bluetoothctl trust {{ edifier_mac }}
+   bluetoothctl connect {{ edifier_mac }}
+
+- name: Wait for device discovery
+  pause:
+   seconds: 5
+    
+- name: Stop scanning, pairing
+  shell: |
+     bluetoothctl pairable off
+     bluetoothctl scan off
+     bluetoothctl quit
+

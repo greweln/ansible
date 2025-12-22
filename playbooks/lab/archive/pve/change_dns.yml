@@ -1,0 +1,17 @@
+---
+# Set the nameserver for matrix
+- name: Update dns for PVE
+  remote_user: root
+  hosts: matrix
+  tasks:
+    - name: Update resolv.conf DNS settings
+      lineinfile:
+        path: /etc/resolv.conf
+        regexp: '^nameserver'
+        line: "nameserver 192.168.1.2"
+        state: present
+
+    - name: Restart networking
+      service:
+        name: networking
+        state: restarted

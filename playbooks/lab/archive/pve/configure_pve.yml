@@ -1,0 +1,106 @@
+---
+  - name: Configure PVE
+    remote_user: root
+    hosts: pve
+    vars:      
+      ansible_ssh_extra_args: '-o StrictHostKeyChecking=no'
+      api_user: "root@pam"
+      packages:
+        helix:
+          config_src: /home/me/Git/configs/tpad/helix
+          config_dest: /root/.config
+        jq: {}
+        vivid: 
+          config_src: /home/me/Git/configs/tpad/vivid
+          config_dest: /root/.config
+        ripgrep: {}
+        bat:
+          config_src: /home/me/Git/configs/tpad/bat
+          config_dest: /root/.config
+        lsd: 
+          config_src: /home/me/Git/configs/tpad/lsd
+          config_dest: /root/.config
+
+    tasks:
+      
+      - name: Disable enterprise repos
+        block:
+          - name: Disable ceph
+            lineinfile:
+              path: /etc/apt/sources.list.d/ceph.list
+              regexp: '^deb https://enterprise.proxmox.com/debian/ceph-quincy bookworm enterprise'
+              line: '# deb https://enterprise.proxmox.com/debian/ceph-quincy bookworm enterprise'
+
+          - name: Disable pve-enterprise
+            lineinfile:
+              path: /etc/apt/sources.list.d/pve-enterprise.list
+              regexp: '^deb https://enterprise.proxmox.com/debian/pve bookworm pve-enterprise'
+              line: '# deb https://enterprise.proxmox.com/debian/pve bookworm pve-enterprise'
+
+          - name: Update the apt cache
+            apt:
+              update_cache: yes
+
+          - name: Upgrade all packages to the latest version
+            apt:
+              upgrade: dist
+              autoremove: yes
+              autoclean: yes
+        tags: disable_repos      
+
+
+      - name: Install packages
+        apt:
+          name: "{{ item.key }}"
+          state: present
+        with_dict: "{{ packages }}"
+        when: item.key != "helix"
+      
+
+
+      - name: Deploy configs
+        block:
+          - name: Create .config dir
+            file:
+              path: /root/.config
+              state: directory
+      
+          - name: Deploy configs for bashrc
+            blockinfile:
+              path: "/root/.bashrc"
+              block: "{{ lookup('file', '/home/me/Git/configs/servers/bashrc_configs') }}"
+              marker_begin: ""
+              marker_end: ""
+               
+
+          - name: Rename batcat to bat
+            command: mv /usr/bin/batcat /usr/bin/bat
+            ignore_errors: true # remove it 
+
+          - name: Deploy configs for all packages
+            copy:
+              src: "{{ item.value.config_src }}"
+              dest: "{{ item.value.config_dest }}"
+            when: 
+              - item.value.config_src is defined
+              - item.value.config_dest is defined
+            with_dict: "{{ packages }}"
+      
+          - name: Setup Helix
+            shell: |
+              curl -s https://api.github.com/repos/helix-editor/helix/releases/latest | jq -r '.assets[] | select(.name | test("x86_64-linux.*tar.xz")) | .browser_download_url' | xargs -n 1 curl -L -o helix-latest.tar.xz &&
+              tar -xJf helix-latest.tar.xz &&
+              rm -f helix-latest.tar.xz &&
+              cp -r helix*/runtime/ /root/.config/helix/ &&
+              cp helix*/hx /usr/bin/ &&
+              rm -rf helix*
+        tags: deploy_configs
+
+
+        
+
+
+
+
+
+

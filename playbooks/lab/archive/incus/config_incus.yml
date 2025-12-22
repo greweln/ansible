@@ -1,0 +1,118 @@
+---
+  - name: Configure Incus virtualization
+    hosts: matrix
+    vars:
+      ansible_ssh_extra_args: '-o StrictHostKeyChecking=no'
+      containers:
+        calcurse: "192.168.1.4"
+        joplin: "192.168.1.5"
+        mariadb: "192.168.1.6"
+    tasks:
+
+      - name: Init Incus
+        ################
+        block:
+          - name: Install packages
+            apt:
+              name:
+                - incus
+                - qemu-system
+                - virt-viewer
+              state: present
+          - name: Copy preseed configuration to Matrix
+            copy:
+              src: "/root/configs/servers/incus_preseed.yaml"
+              dest: "/tmp/"
+          - name: Initialize Incus using the preseed configuration
+            shell:
+              cmd: |
+                incus admin init --preseed < /tmp/incus_preseed.yaml
+          - name: Clean up preseed file
+            file:
+              path: /tmp/incus_preseed.yaml
+              state: absent
+        tags: init_incus
+
+
+
+      - name: Initialize containers
+        ###########################
+        block:
+        - name: Download Rocky9 image
+          command: "incus image copy images:rockylinux/9 local:"
+        - name: Check if container exists
+          command: "incus info {{ item.key }}"
+          register: container_check
+          with_dict: "{{ containers }}"
+          ignore_errors: yes
+          no_log: true
+        - name: Create the containers if not present
+          command: "incus launch images:rockylinux/9 {{ item.item.key }}"
+          when: item.rc != 0 
+          with_items: "{{ container_check.results }}"
+        tags: init_containers
+      
+
+
+
+      - name: Configure the networking
+        ##############################
+        block:
+        - name: Set IP
+          shell: |
+            incus exec {{ item.key }} -- nmcli conn mod System\ eth0 ipv4.addresses {{ item.value }}/24 &&
+            incus exec {{ item.key }} -- nmcli conn mod System\ eth0 ipv4.gateway 192.168.1.1 &&
+            incus exec {{ item.key }} -- nmcli conn mod System\ eth0 ipv4.dns 192.168.1.2 &&
+            incus exec {{ item.key }} -- nmcli conn mod System\ eth0 ipv4.method manual &&
+            incus exec {{ item.key }} -- systemctl restart NetworkManager
+            incus restart {{ item.key }}
+          with_dict: "{{ containers }}"
+        tags: config_networking
+
+
+
+      
+      - name: Configure containers's ssh
+        ###################
+        block:
+          - name: Fetch Zion's SSH public key
+            slurp:
+              path: /root/.ssh/id_rsa.pub
+            delegate_to: localhost
+            register: zion_key
+          - name: Fetch Tpad's SSH public key
+            slurp:
+              path: /home/me/.ssh/id_rsa.pub
+            delegate_to: tpad
+            register: tpad_key
+          - name: Save the ssh keys in a file on Matrix
+            copy:
+              dest: "/root/authorized_keys"  
+              content: |
+                {{ tpad_key.content | b64decode }}
+                {{ zion_key.content | b64decode }}
+          - name: Install SSH
+            command: |
+              incus exec {{ item.key }} -- dnf install -y openssh-server
+            with_dict: "{{ containers }}"
+          - name: Enable ssh
+            command: |
+              incus exec {{ item.key }} -- systemctl enable --now sshd
+            with_dict: "{{ containers }}"
+          - name: Copy authorized keys inside containers
+            command: incus file push /root/authorized_keys "{{ item.key }}/root/.ssh/"
+            with_dict: "{{ containers }}"
+          - name: Delete file with the ssh keys
+            file:
+              path: /root/authorized_keys
+              state: absent
+          - name: Setup the SSH directory
+            shell: |
+              incus exec {{ item.key }} -- mkdir -p /root/.ssh
+              incus exec {{ item.key }} -- chmod -R 700 /root/.ssh
+              incus exec {{ item.key }} -- chmod 600 /root/.ssh/authorized_keys
+            with_dict: "{{ containers }}"      
+        tags: config_ssh
+
+
+

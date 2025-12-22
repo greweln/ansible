@@ -1,0 +1,100 @@
+---
+
+- name: Initialize and setup LXCs ssh access from Zion && Tpad
+  remote_user: root
+  hosts: pve
+  vars:      
+    ansible_ssh_extra_args: '-o StrictHostKeyChecking=no'
+    api_user: "root@pam"
+    rocky_image: "rockylinux-9-default_20240912_amd64.tar.xz"
+    api_password: "xxx"
+    lxc_passord: xxx
+    lxc:
+      ansible: 
+        id: 114
+        ip: "192.168.1.14"    
+      prometheus: 
+        id: 102
+        ip: "192.168.1.11"    
+      grafana: 
+        id: 103
+        ip: "192.168.1.12"    
+      calcurse: 
+        id: 104
+        ip: "192.168.1.4"
+      joplin: 
+        id: 105
+        ip: "192.168.1.5"
+      mariadb: 
+        id: 106
+        ip: "192.168.1.6"    
+      git: 
+        id: 107
+        ip: "192.168.1.7"    
+      dns: 
+        id: 108
+        ip: "192.168.1.8"    
+      gotify: 
+        id: 109
+        ip: "192.168.1.9"    
+
+
+  tasks:
+    - name: Download template
+      command: pveam download local "{{ rocky_image }}"
+
+    - name: Check if LXC container exists
+      shell: pct status {{ item.value.id }} > /dev/null 2>&1 # need redirection to supress showing the error if lxc doesn't exist
+      register: pct_status_check
+      failed_when: false  # Ignore failure if container doesn't exist
+      with_dict: "{{ lxc }}"
+
+
+    - name: Deploy ssh keys on PVE
+      block:
+        - name: Get Tpad's key
+          slurp:
+            path: /home/me/.ssh/id_rsa.pub
+          register: tpad_key
+          delegate_to: localhost
+
+
+        # Create a file with keys to be passed to the lxc
+        - name: Save the keys in a file on PVE
+          copy:
+            dest: "/root/ssh_keys"  
+            content: |
+              {{ tpad_key.content | b64decode }}
+            mode: '0600'
+    
+        - name: Deploy Tpad's ssh key to PVE's root
+          authorized_key:
+            user: root
+            key: "{{ tpad_key['content'] | b64decode }}" 
+      tags: deploy_ssh_keys
+
+
+    - name: Create containers
+      shell: |
+        pct create {{ item.item.value.id }} \
+          local:vztmpl/"{{ rocky_image }}" \
+          --hostname {{ item.item.key }} \
+          --password xxx \
+          --timezone host \
+          --storage local-lvm \
+          --memory 1024 \
+          --onboot 1 \
+          --start 1 \
+          --net0 name=eth0,gw=192.168.1.1,ip={{ item.item.value.ip }}/24,bridge=vmbr0 \
+          --ssh-public-keys "/root/ssh_keys"
+      when: item.rc != 0
+      with_items: "{{ pct_status_check.results }}"          
+
+    - name: Install and configure the ssh service on the containers
+      shell: |
+        pct exec {{ item.value.id }} -- dnf install -y openssh-server
+        pct exec {{ item.value.id }} -- systemctl enable --now sshd
+      with_dict: "{{ lxc }}"
+
+
+      # pct create 110 local:vztmpl/rockylinux-9-default_20240912_amd64.tar.xz --hostname oracle --password xxx --storage local-zfs --memory 2048 --net0 name=eth0,gw=192.168.1.1,bridge=vmbr0,ip=192.168.1.9/24 --ssh-public-keys "/root/ssh_keys" --description "File server" --features fuse=1,nesting=1 --start 1 --onboot 1 --mp1 /oracle,mp=/oracle --nameserver 192.168.1.2

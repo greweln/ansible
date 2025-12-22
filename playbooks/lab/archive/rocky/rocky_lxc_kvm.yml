@@ -1,0 +1,258 @@
+---
+# TODO:
+# zpool 'files' is not configured here
+
+- name: Configure Matrix
+  hosts: matrix
+  vars:
+    ansible_ssh_extra_args: '-o StrictHostKeyChecking=no'
+    packages:
+      helix: 
+        src: /root/configs/tpad/helix
+        dest: /root/.config
+      bat: 
+        src: /root/configs/tpad/bat
+        dest: /root/.config
+      ripgrep:
+      lsd:
+        src: /root/configs/tpad/lsd
+        dest: /root/.config
+        bin: /files/lab/bin/lsd
+      vivid:
+        src: /root/configs/tpad/vivid
+        dest: /root/.config
+        bin: /files/lab/bin/vivid
+  
+  tasks:
+    # Fuck SELinux
+    - name: Set SELinux to permissive mode
+      selinux:
+        policy: targeted
+        state: permissive
+
+
+    
+
+    
+    - name: Set-up epel-release repo
+      block:
+        - name: Install EPEL repo
+          dnf:
+            name: epel-release
+            state: present    
+    
+        - name: Enable crb
+          command: dnf config-manager --set-enabled crb
+    
+        - name: Update all packages
+          dnf:
+            name: '*'
+            state: latest
+            update_cache: yes
+      tags: config_epel
+
+    
+    
+    - name: Install packages
+      block:
+        - name: Install packages
+          dnf:
+            name: "{{ item.key }}"
+            state: present
+          with_dict: "{{ packages }}"
+          when: item.key not in ["lsd", "vivid"]
+      
+        - name: Install local binaries
+          copy:
+            src: "{{ item.value.bin }}"
+            dest: "/usr/bin/{{ item.key }}"
+            mode: '0755'
+          with_dict: "{{ packages }}"
+          when: item.value.bin is defined
+      tags: install_packages
+
+
+      
+    - name: Deploy config files
+      block:
+      - name: Deploy bashrc
+        copy:
+          src: /root/configs/servers/bashrc
+          dest: /root/.bashrc
+
+      - name: Change bashrc prompt color
+        lineinfile:
+          path: /root/.bashrc
+          regexp: '^PS1=".*\\[\\h\\].*\\(\\w\\).*"$'
+          line: 'PS1="${YELLOW_BOLD}[\h]${GREY}:(\w):${RESET} "'
+    
+      - name: Create the ".config" dir
+        file:
+          path: /root/.config
+          state: directory
+
+      - name: Deploy configs
+        copy: 
+          src: "{{ item.value.src }}"
+          dest: "{{ item.value.dest }}"
+        with_dict: "{{ packages }}"
+        when: 
+          - item.value.src is defined
+          - item.value.dest is defined
+      tags: config_files
+
+
+
+
+    - name: Install and configure zfs
+      block:
+         # Import the GPG key for ZFS repository
+        - name: Import ZFS GPG key
+          ansible.builtin.rpm_key:
+            state: present
+            key: https://raw.githubusercontent.com/zfsonlinux/zfsonlinux.github.com/master/zfs-release/RPM-GPG-KEY-openzfs-key2
+        
+        - name: Get the repo
+          dnf:
+            name: 'https://zfsonlinux.org/epel/zfs-release-2-3.el9.noarch.rpm'
+            state: present
+
+        - name: Disable ZFS repository
+          command:
+            cmd: dnf config-manager --disable zfs
+          ignore_errors: yes  # In case it's not enabled already, we continue
+
+        - name: Enable ZFS-KMOD repository
+          command:
+            cmd: dnf config-manager --enable zfs-kmod   
+        
+        - name: Install zfs
+          dnf:
+            name: zfs
+            state: present
+
+        - name: Load zfs modules automatically
+          shell: |
+            echo zfs >/etc/modules-load.d/zfs.conf
+            /sbin/modprobe zfs
+          tags: caca
+      tags:
+        config_zfs
+
+
+
+    - name: Set-up virtualization
+      vars:
+        services:
+          - libvirtd
+          - libvirt-guests
+          - lxc
+        containers:
+          calcurse: "192.168.1.4"
+          joplin: "192.168.1.5"
+          git: "192.168.1.6"
+          mariadb: "192.168.1.7"
+        packages:
+          - "@Virtualization Host"
+          - lxc
+          - lxc-templates
+          - lxc-doc
+
+      block:
+        - name: Enable services
+          systemd:
+            name: "{{ item }}"
+            enabled: true
+            state: started
+          loop: "{{ services }}"
+
+        - name: Set the bridge in LXC configuration file
+          lineinfile:
+            path: /etc/lxc/default.conf
+            regexp: '^lxc.net.0.link = lxcbr0$'
+            line: 'lxc.net.0.link = br0'  
+
+        - name: Check if container exist
+          command: lxc-info -n "{{ item.key }}"
+          no_log: true # don't show the errors, I don't care confirming that lxc doesn't exist
+          ignore_errors: true # otherwise playbook stops
+          register: container_info
+          with_dict: "{{ containers }}"
+
+        - name: Create the lxc containers
+          command: lxc-create --name "{{ item.item.key }}" --template download -- --dist rockylinux --release 9 --arch amd64          
+          when: item.rc != 0
+          with_items: "{{ container_info.results }}"
+
+
+        - name: Start the containers
+          command: lxc-start "{{ item.key }}"
+          with_dict: "{{ containers }}"
+        
+        
+        - name: Wait for container to get an IP
+          command: lxc-info -i  "{{ item.key }}"
+          register: container_ip
+          until: container_ip.stdout | length > 0
+          retries: 1
+          delay: 10
+          ignore_errors: yes
+          with_dict: "{{ containers }}"
+        
+        - name: Install ssh
+          command: |
+            lxc-attach {{ item.key }} -- dnf install -y openssh-server
+          with_dict: "{{ containers }}"
+
+        - name: Enable ssh
+          command: |
+            lxc-attach {{ item.key }} -- systemctl enable --now sshd
+          with_dict: "{{ containers }}"
+
+
+        - name: Setup the SSH directory
+          shell: |
+            lxc-attach {{ item.key }} -- mkdir -p /root/.ssh
+            lxc-attach {{ item.key }} -- chmod -R 700 /root/.ssh
+            lxc-attach {{ item.key }} -- touch /root/.ssh/authorized_keys
+            lxc-attach {{ item.key }} -- chmod 600 /root/.ssh/authorized_keys
+          with_dict: "{{ containers }}"
+
+        - name: Read Tpad's ssh public key
+          slurp:
+            path: /home/me/.ssh/id_rsa.pub
+          register: tpad_ssh_pub_key
+          delegate_to: tpad   # Read SSH key from tpad host
+
+        - name: Read Nexus's SSH public key
+          slurp:                         # read the key's content ant store it a variable
+            path: /root/.ssh/id_rsa.pub
+          register: nexus_ssh_pub_key
+          delegate_to: nexus
+
+        - name: Deploy Tpad's ssh key to Matrix
+          authorized_key:
+            user: "{{ host_user }}"
+            key: "{{ tpad_ssh_pub_key['content'] | b64decode }}" 
+          vars:
+              host_user: "{{ 'root' }}"
+          
+        
+        - name: Deploy Nexus and Tpad  SSH public key to containers
+          shell: |
+            echo "{{ nexus_ssh_pub_key['content'] | b64decode }}" | lxc-attach -n {{ item.key }} -- tee -a /root/.ssh/authorized_keys
+            echo "{{ tpad_ssh_pub_key['content'] | b64decode }}" | lxc-attach -n {{ item.key }} -- tee -a /root/.ssh/authorized_keys
+          with_dict: "{{ containers }}"
+
+
+        - name: Configure the LXC networking
+          shell: |
+            lxc-attach {{ item.key }} -- nmcli conn mod System\ eth0 ipv4.addresses {{ item.value }}/24
+            lxc-attach {{ item.key }} -- nmcli conn mod System\ eth0 ipv4.gateway 192.168.1.1
+            lxc-attach {{ item.key }} -- nmcli conn mod System\ eth0 ipv4.dns 192.168.1.1
+            lxc-attath {{ item.key }} -- nmcli conn mod System\ eth0 ipv4.method manual
+            lxc-attach {{ item.key }} -- nmcli conn down System\ eth0
+            lxc-attach {{ item.key }} -- nmcli conn up System\ eth0
+          with_dict: "{{ containers }}"
+
+      tags: config_virtualization

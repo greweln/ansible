@@ -1,0 +1,18 @@
+    - name: Create dirs structure
+      file:
+        path: "{{ item }}"
+        mode: "0755"
+        state: directory
+      loop: "{{ dirs }}"
+      tags: filesystem
+
+
+      
+    - name: Create symbolic links git - dotfiles
+      file:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+        state: link
+        force: yes
+      loop: "{{ links }}"
+      tags: links

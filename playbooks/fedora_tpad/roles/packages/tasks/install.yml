@@ -1,0 +1,47 @@
+# Install system and user env packages
+- name: Update the system
+  dnf:
+    name: "*"
+    state: latest
+  become: true
+  tags: update
+
+
+- name: Install system and user env packages
+  dnf:
+    name: "{{ system_packages + user_packages }}"
+    state: present
+  become: true
+  tags: dnf_packages
+
+- name: Set-up Rust
+  shell: |
+    rustup-init -y
+  args:
+    creates: "{{ ansible_env.HOME }}/.cargo/bin/rustup" # avoid running again if installed
+  tags: rust
+
+
+- name: Add rust-analyzer via rustup
+  shell: rustup component add rust-analyzer
+  environment: "{{ rust_env }}"
+  tags: rust_analyzer
+
+- name: Install cargo packages
+  community.general.cargo:
+    name: "{{ item }}"
+    state: present
+  environment: "{{ rust_env }}"
+  loop: "{{ cargo_packages }}"
+  tags: cargo_packages
+
+
+
+
+- name: Install NodeJS packages
+  community.general.npm:
+    name: "{{ item }}"
+    global: yes
+  loop: "{{ nodejs_packages }}"
+  become: true
+  tags: nodejs_packages

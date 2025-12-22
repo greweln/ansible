@@ -1,0 +1,68 @@
+rpmfusion_repos:
+  - "https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-{{ ansible_distribution_major_version }}.noarch.rpm"
+  - "https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-{{ ansible_distribution_major_version }}.noarch.rpm"
+
+
+system_packages:  
+  - "@base-x"
+  - git
+  - bluez-tools
+  - curl
+  - NetworkManager-wifi
+  - samba-client
+  - cifs-utils
+  - nfs-utils
+  - python3-pip
+  - lshw
+  - cronie               # crontab
+  - tar
+  - gcc
+
+
+user_packages:
+  - rustup
+  - nodejs
+  - firefox
+  - bat
+  - dunst
+  - xmodmap              # keyboard keys customizition
+  - xrandr               # monitors setup
+  - xrdb                 # load Xresources
+  - ripgrep
+  - maim                 # screenshots
+  - mpv
+  - mpd                  # RPM Fusion
+  - brightnessctl
+  - feh                  # wallpaper setup, image viewer
+  - helix
+  - nodejs-bash-language-server
+  - xsetroot             # cursor shape
+  - xinput               # touchpad
+  - xset
+  - slock                # screen lock
+  - xss-lock             # screen lock
+  - xclip                # copy clipboard
+  - lsd                  # modern ls
+  - calcurse             # calendar
+  - xcb-util-image       # dep. xwallpaper
+  - libXpm               # ---- || -------
+  - libXinerama-devel    # dmenu
+  - python3-httplib2     # calcurse caldav sync
+  - libatomic            # req for nodejs
+  - libXinerama-devel    # req st
+  - openssl-devel        # ferris depend
+  - libXft-devel         # ferris depend
+  - libX11-devel         # ferris depend
+
+
+  
+nodejs_packages:
+  - pyright
+
+cargo_packages:
+  - vivid
+  - rmpc
+
+rust_env:
+  PATH: "{{ ansible_env.HOME }}/.cargo/bin:{{ ansible_env.PATH }}"
+

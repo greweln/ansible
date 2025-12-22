@@ -1,0 +1,267 @@
+---
+  - name: Configure containers instances
+    hosts: containers
+    vars:
+      ansible_ssh_extra_args: '-o StrictHostKeyChecking=no'
+      packages:
+        epel-release:
+        helix: 
+          src: /root/configs/tpad/helix
+          dest: /root/.config
+        bat: 
+          src: /root/configs/tpad/bat
+          dest: /root/.config
+        ripgrep:
+        lsd:
+          src: /root/configs/tpad/lsd
+          dest: /root/.config
+          bin: /oracle/lab/bin/lsd
+        vivid:
+          src: /root/configs/tpad/vivid
+          dest: /root/.config
+          bin: /oracle/lab/bin/vivid
+    tasks:
+
+
+      - name: Deploy configs for bashrc
+        blockinfile:
+          path: "/root/.bashrc"
+          block: "{{ lookup('file', '/root/configs/servers/bashrc_configs') }}"
+          marker_begin: "My custom configs"
+          marker_end: " END "
+          marker: "#----- {mark} ------"
+
+      - name: Create the ".config" dir
+        file:
+          path: /root/.config
+          state: directory
+
+      - name: Install packages from EPEL
+        dnf:
+          name: "{{ item.key }}"
+          state: present
+        with_dict: "{{ packages }}"
+        when: item.key not in ["lsd", "vivid"]
+
+      - name: Enable crb
+        command: dnf config-manager --set-enabled crb
+
+      - name: Update all packages
+        dnf:
+          name: '*'
+          state: latest
+          update_cache: yes
+
+      - name: Install packages not available in EPEL
+        copy:
+          src: "{{ item.value.bin }}"
+          dest: "/usr/bin/{{ item.key }}"
+          mode: '0755'
+        with_dict: "{{ packages }}"
+        when: item.value.bin is defined
+    
+      - name: Copy configs
+        copy: 
+          src: "{{ item.value.src }}"
+          dest: "{{ item.value.dest }}"
+        with_dict: "{{ packages }}"
+        when: 
+          - item.value.src is defined
+          - item.value.dest is defined
+
+
+      
+  - name: Configure MariaDB
+    #######################
+    hosts: mariadb
+    vars:
+      ansible_python_interpreter: /usr/bin/python3
+      ansible_ssh_extra_args: '-o StrictHostKeyChecking=no'
+    tasks:
+      - name: Install  python3-mysqlclient
+        dnf:
+          name:  python3-mysqlclient
+          state: present
+    
+      - name: Install mariaDB
+        dnf:
+          name: mariadb-server
+          state: present
+
+      - name: Enable MariaDB service
+        systemd_service:
+          name: mariadb
+          state: started
+          enabled: yes 
+
+      - name: Secure MariaDB installation
+        shell: |
+          mysql -e "UPDATE mysql.user SET Password = PASSWORD('xxx') WHERE User = 'root';"
+          mysql -e "DELETE FROM mysql.user WHERE User='';"
+          mysql -e "DROP DATABASE test;"
+          mysql -e "FLUSH PRIVILEGES;"
+
+      - name: Create Baikal database
+        mysql_db:
+          name: baikal
+          state: present
+
+      - name: Create Baikal user with remote access
+        mysql_user:
+          name: baikal
+          password: xxx
+          host: calcurse
+          priv: 'baikal.*:ALL'  # Grant all privileges on the baikal database
+          state: present
+
+      - name: Ensure that MariaDB is listening on the correct interfaces
+        lineinfile:
+          path: /etc/my.cnf.d/mariadb-server.cnf
+          regexp: '^bind-address'
+          line: 'bind-address = 0.0.0.0'
+
+      - name: Enable and start mariadb service
+        service:
+          name: mariadb
+          state: started
+          enabled: yes
+    tags: config_mariadb
+
+
+
+    
+  - name: Configure Calcurse
+    ########################
+    hosts: calcurse  
+    vars:
+      ansible_ssh_extra_args: '-o StrictHostKeyChecking=no'
+  
+    tasks:
+      - name: Install Apache
+        dnf:
+          name: httpd
+          state: present
+
+      - name: Install Remi repository for PHP 8.0
+        dnf:
+          name: https://rpms.remirepo.net/enterprise/remi-release-9.rpm  
+          disable_gpg_check: True
+          state: present
+
+
+      - name: Enable Remi repository
+        command: dnf module enable php:remi-8.3 -y
+
+      - name: Install PHP and required extensions
+        dnf:
+          name:
+            - php-common
+            - php-cli
+            - php-gmp
+            - php-fpm
+            - php-curl
+            - php-intl
+            - php-pdo
+            - php-mbstring
+            - php-gd
+            - php-zip
+            - php-mysqli
+            - php-xml
+          state: present
+
+      - name: Config Baikal
+        copy:
+          src: /oracle/lab/packages/baikal
+          dest: /var/www/html/
+          owner: apache
+          group: apache
+          mode: '0755'
+
+      - name: Set permissions on html dir
+        file:
+          path: /var/www/html
+          state: directory
+          owner: apache
+          group: apache
+          mode: '0755'
+          recurse: yes
+
+      - name: Copy baikal.conf
+        copy:
+          src: /root/configs/servers/baikal.conf
+          dest: /etc/httpd/conf.d
+          owner: apache
+          group: apache
+          mode: '0644' 
+
+      - name: Enable & start Apache
+        service:
+          name: httpd
+          state: started
+          enabled: yes
+    tags: config_calcurse
+
+
+    
+
+  - name: Configure Joplin
+    ######################
+    hosts: joplin
+    vars:
+      ansible_ssh_extra_args: '-o StrictHostKeyChecking=no'
+    tasks:
+      - name: Install Apache
+        dnf:
+          name: "{{ item }}"
+          state: present
+        loop:
+          - httpd
+          - python3-setuptools
+          - python3-pip
+          - python3-passlib
+
+
+      - name: Config Joplin's dir
+        file:
+          path: "{{ item }}"
+          state: directory
+          owner: apache
+          group: apache
+          mode: '0755'
+          recurse: yes
+        loop:
+          - /var/www/html
+          - /var/www/html/sergiu
+
+      - name: Copy joplin.conf
+        copy:
+          src: /root/configs/servers/joplin.conf
+          dest: /etc/httpd/conf.d
+          owner: apache
+          group: apache
+          mode: '0644' 
+
+    
+      - name: Config .htpasswd file
+        htpasswd:
+          path: /etc/httpd/.htpasswd
+          name: sergiu
+          password: xxx
+
+      - name: Set permission on htpasswd
+        file:
+          path: /etc/httpd/.htpasswd
+          owner: apache
+          group: apache
+          mode: '0640'
+
+      - name: Enable & start Apache
+        service:
+          name: httpd
+          state: started
+          enabled: yes
+    tags: config_joplin
+
+
+
+

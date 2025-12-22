@@ -1,0 +1,133 @@
+---
+  - name: Configure Matrix
+    hosts: joobee
+    become: true
+    vars:
+      packages:
+        helix:
+          # TODO: get the runtime dir from Github releases. The one from Fedora is not working on Debian
+          config_src: "/root/.config/helix"
+          config_dest: "/root/.config"
+          bin: "/oracle/lab/bin/hx"
+        bat: {}
+        ripgrep: {}
+        lsd:
+          config_src: "/root/.config/lsd"  
+          config_dest: "/root/.config"
+          bin: "/oracle/lab/bin/lsd"
+        vivid:
+          config_src: "/root/.config/vivid"
+          config_dest: "/root/.config"          
+    tasks:
+
+
+
+      # Assumes that the active interface is enp3s0
+      - name: Configure the bridge interface
+        ####################################
+        block:
+          - name: Update everything
+            apt: 
+              update_cache: yes
+          - name: Install requirements
+            apt:
+              name: 
+                - bridge-utils
+                - resolvconf
+              state: present
+          - name: Deploy the bridge interface config
+            copy:
+              src: /home/me/configs/servers/matrix-interfaces
+              dest: /etc/network/interfaces
+          - name: Restart networking
+            systemd: 
+              name: networking
+              state: restarted
+        tags: config_bridge
+
+
+
+      
+      - name: Install zfs
+        #################
+        block:
+          - name: Add backport repo
+            copy:
+              dest: "/etc/apt/sources.list.d/bookworm-backports.list"
+              content: |
+                deb http://deb.debian.org/debian bookworm-backports main contrib
+                deb-src http://deb.debian.org/debian bookworm-backports main contrib
+          - name: Pin zfs package
+            copy:
+              dest: "/etc/apt/preferences.d/90_zfs"
+              content: |
+                Package: src:zfs-linux
+                Pin: release n=bookworm-backports
+                Pin-Priority: 990
+          - name: Update all
+            apt: 
+              update_cache: yes
+          - name: Install zfs
+            apt:
+              name: 
+                - dpkg-dev 
+                - linux-headers-generic 
+                - linux-image-generic
+                - zfs-dkms
+                - zfsutils-linux
+              state: present
+            environment:
+              DEBIAN_FRONTEND: noninteractive
+        tags: install_zfs
+
+
+      
+
+      - name: Install and configure packages
+        ####################################
+        block:
+          - name: Install/deploy packages
+            apt:
+              name: "{{ item.key }}"
+              state: present
+            when: item.value.bin is not defined 
+            with_dict: "{{ packages }}"
+          - name: Rename batcat to bat
+            command: mv /usr/bin/batcat /usr/bin/bat
+            ignore_errors: true 
+          - name: Create the .config dir
+            file:
+              path: "/root/.config"
+              state: directory
+          - name: Deploy configs for bashrc
+            blockinfile:
+              path: "/root/.bashrc"
+              block: "{{ lookup('file', '/root/configs/servers/bashrc_configs') }}"
+              marker_begin: ""
+              marker_end: ""
+          - name: Deploy configs
+            copy: 
+              src: "{{ item.value.config_src }}"
+              dest: "{{ item.value.config_dest }}"
+            with_dict: "{{ packages }}"
+            when: 
+              - item.value.config_src is defined
+              - item.value.config_dest is defined
+          - name: Deploy binaries
+            copy: 
+              src: "{{ item.value.bin }}"
+              dest: "/usr/bin"
+              mode: 0755
+            with_dict: "{{ packages }}"
+            when: 
+              - item.value.bin is defined
+          - name: Fetch Tpad's SSH public key
+            slurp:
+              path: /home/me/.ssh/id_rsa.pub
+            delegate_to: tpad
+            register: tpad_key          
+          - name: Deploy Tpad's pub ssh key
+            authorized_key:
+              user: root
+              key: "{{ tpad_key['content'] | b64decode }}" 
+        tags: config_packages

@@ -1,0 +1,71 @@
+# Install system and user env packages
+- name: Update the system
+  dnf:
+    name: "*"
+    state: latest
+  become: true
+  tags: update
+
+
+- name: Install system packages
+  dnf:
+    name: "{{ system_packages  }}"
+    state: present
+  become: true
+  tags: system_packages
+  
+- name: Install user env packages
+  dnf:
+    name: "{{ user_packages  }}"
+    state: present
+  become: true
+  tags: user_packages
+
+
+
+- name: Set up Rust
+  shell: |
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+  tags: rust
+
+
+- name: Add rust-analyzer via rustup
+  shell: rustup component add rust-analyzer
+  environment: "{{ rust_env }}"
+  tags: rust_analyzer
+
+- name: Install cargo packages
+  community.general.cargo:
+    name: "{{ item }}"
+    state: present
+  environment: "{{ rust_env }}"
+  loop: "{{ cargo_packages }}"
+  tags: cargo_packages
+
+
+
+- name: Add NodeSource repository for latest Node.js LTS
+  ansible.builtin.shell: |
+    curl -fsSL https://rpm.nodesource.com/setup_lts.x | bash -
+  args:
+    executable: /bin/bash
+  changed_when: false
+  become: true
+  tags: nodejs
+
+- name: Install Node.js
+  dnf:
+    name: nodejs
+    state: present
+  become: true
+  tags: nodejs
+
+
+- name: Install NodeJS packages
+  community.general.npm:
+    name: "{{ item }}"
+    global: yes
+  loop: "{{ nodejs_packages }}"
+  become: true
+  tags: nodejs_packages
+

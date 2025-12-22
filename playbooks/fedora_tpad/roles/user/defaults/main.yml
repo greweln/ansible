@@ -1,0 +1,97 @@
+dirs:
+  - "{{ ansible_env.HOME }}/Documents"
+  - "{{ ansible_env.HOME }}/Lab"
+  - "{{ ansible_env.HOME }}/Library"
+  - "{{ ansible_env.HOME }}/Music"
+  - "{{ ansible_env.HOME }}/Pictures"
+  - "{{ ansible_env.HOME }}/Videos"
+  - "{{ ansible_env.HOME }}/Downloads"
+  - "{{ ansible_env.HOME }}/Workspace"
+  - "{{ ansible_env.HOME }}/bin"
+  - "{{ ansible_env.HOME }}/.config"
+  - "{{ ansible_env.HOME }}/local/share"
+  - "{{ ansible_env.HOME }}/logs"
+  - "{{ ansible_env.HOME }}/.cache"
+
+git_repos:
+  - repo: git@github.com:greweln/configs.git
+    dest: "{{ ansible_env.HOME }}/Git/configs"
+    branch: main
+  - repo: git@github.com:greweln/ferris.git
+    dest: "{{ ansible_env.HOME }}/Git/ferris"
+    branch: main
+  - repo: git@github.com:greweln/clink.git
+    dest: "{{ ansible_env.HOME }}/Git/clink"
+    branch: main
+  - repo: git@github.com:greweln/penrose.git
+    dest: "{{ ansible_env.HOME }}/Git/penrose"
+    branch: ferris
+  - repo: git@github.com:greweln/ansible.git
+    dest: "{{ ansible_env.HOME }}/Git/ansible"
+    branch: main
+  - repo: git@github.com:greweln/prox-fetch.git
+    dest: "{{ ansible_env.HOME }}/Git/prox-fetch"
+    branch: main
+
+links:
+  - src: "{{ ansible_env.HOME }}/Git/configs/tpad/.bashrc"
+    dest: "{{ ansible_env.HOME }}/.bashrc"
+  - src: "{{ ansible_env.HOME }}/Git/configs/tpad/.bash_profile"
+    dest: "{{ ansible_env.HOME }}/.bash_profile"
+  - src: "{{ ansible_env.HOME }}/Git/configs/tpad/.profile"
+    dest: "{{ ansible_env.HOME }}/.profile"
+  - src: "{{ ansible_env.HOME }}/Git/configs/tpad/.xinitrc"
+    dest: "{{ ansible_env.HOME }}/.xinitrc"
+  - src: "{{ ansible_env.HOME }}/Git/configs/tpad/.fonts"
+    dest: "{{ ansible_env.HOME }}/.fonts"
+  - src: "{{ ansible_env.HOME }}/Git/configs/tpad/.Xresources"
+    dest: "{{ ansible_env.HOME }}/.Xresources"
+  - src: "{{ ansible_env.HOME }}/Git/configs/tpad/.Xmodmap"
+    dest: "{{ ansible_env.HOME }}/.Xmodmap"
+  - src: "{{ ansible_env.HOME }}/Git/configs/tpad/joplin"
+    dest: "{{ ansible_env.HOME }}/.config/joplin"
+  - src: "{{ ansible_env.HOME }}/Git/configs/tpad/dmenu"
+    dest: "{{ ansible_env.HOME }}/.config/dmenu"
+  - src: "{{ ansible_env.HOME }}/Git/configs/tpad/calcurse"
+    dest: "{{ ansible_env.HOME }}/.config/calcurse"
+  - src: "{{ ansible_env.HOME }}/Git/configs/tpad/dunst"
+    dest: "{{ ansible_env.HOME }}/.config/dunst"
+  - src: "{{ ansible_env.HOME }}/Git/ferris"
+    dest: "{{ ansible_env.HOME }}/.config/ferris"
+  - src: "{{ ansible_env.HOME }}/Git/configs/tpad/lsd"
+    dest: "{{ ansible_env.HOME }}/.config/lsd"
+  - src: "{{ ansible_env.HOME }}/Git/configs/tpad/helix" # get latest runtimes from github
+    dest: "{{ ansible_env.HOME }}/.config/helix"
+  - src: "{{ ansible_env.HOME }}/Git/configs/tpad/mpd"
+    dest: "{{ ansible_env.HOME }}/.config/mpd"
+  - src: "{{ ansible_env.HOME }}/Git/configs/tpad/rmpc"
+    dest: "{{ ansible_env.HOME }}/.config/rmpc"
+  - src: "{{ ansible_env.HOME }}/Git/configs/tpad/slock"
+    dest: "{{ ansible_env.HOME }}/.config/slock"
+  - src: "{{ ansible_env.HOME }}/Git/configs/tpad/st"
+    dest: "{{ ansible_env.HOME }}/.config/st"
+  - src: "{{ ansible_env.HOME }}/Git/configs/tpad/systemd"
+    dest: "{{ ansible_env.HOME }}/.config/systemd"
+  - src: "{{ ansible_env.HOME }}/Git/configs/tpad/vivid"
+    dest: "{{ ansible_env.HOME }}/.config/vivid"
+  - src: "{{ ansible_env.HOME }}/Git/configs/tpad/yazi"
+    dest: "{{ ansible_env.HOME }}/.config/yazi"
+  - src: "{{ ansible_env.HOME }}/Git/configs/tpad/clink"
+    dest: "{{ ansible_env.HOME }}/.config/clink"
+  - src: "{{ ansible_env.HOME }}/Git/configs/tpad/dprint"
+    dest: "{{ ansible_env.HOME }}/.config/dprint"
+  - src: "{{ ansible_env.HOME }}/Git/configs/tpad/.ssh/config"
+    dest: "{{ ansible_env.HOME }}/.ssh/config"
+
+binaries:
+  - dprint # helix markdown code format
+  - marksman # helix markdown lsp
+  - st-joplin
+  - xwallpaper
+  - gpass
+
+
+# rust_env:
+#   HOME: /home/me
+#   PATH: "/home/me/.cargo/bin:/usr/local/bin:/usr/bin:/bin"
+

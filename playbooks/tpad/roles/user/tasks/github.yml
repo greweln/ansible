@@ -1,0 +1,39 @@
+- name: Slurp the SSH public key
+  slurp:
+    src: "{{ ansible_env.HOME }}/.ssh/id_rsa.pub"
+  register: slurped_key
+
+- name: Decode the key
+  set_fact:
+    ssh_public_key: "{{ slurped_key.content | b64decode }}"  
+
+# The 'github_token' and it's value  are encrypted in vault.
+- name: Upload SSH public key to GitHub
+  community.general.github_key:
+    token: "{{ github_token }}"
+    name: "Laptop key: {{ hostname_test }}"
+    pubkey: "{{ ssh_public_key }}"
+    state: present
+  tags: github_ssh
+
+
+- name: Create local git dirs
+  file:
+    path: "{{ item.dest }}"
+    state: directory
+    recurse: true
+  loop: "{{ git_repos }}"
+  tags: git_dirs
+
+- name: Clone git repositories
+  git:
+    repo: "{{ item.repo }}"
+    dest: "{{ item.dest }}"
+    version: "{{ item.branch }}"
+    force: yes             # ensures branch is checked out. Ferris depends on Penrose ferris branch
+    update: yes
+    accept_hostkey: yes
+  loop: "{{ git_repos }}"
+  environment:
+    GIT_SSH_COMMAND: "ssh -i {{ ansible_env.HOME }}/.ssh/id_rsa -o StrictHostKeyChecking=no"
+  tags: clone_repos

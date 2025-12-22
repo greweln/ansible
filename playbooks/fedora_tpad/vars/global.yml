@@ -1,0 +1,7 @@
+# The file defines variables to be called everywhere as:
+#  vars_files:
+#    - vars/global.yml
+
+user_name: me
+hostname_test: "testing"
+edifier_mac: "60:F4:3A:4D:43:08"

@@ -1,0 +1,22 @@
+- import_tasks: ssh.yml
+  tags: ssh
+
+- import_tasks: github.yml
+  tags: github
+
+- import_tasks: filesystem.yml
+  tags: filesystem
+
+- import_tasks: mounts.yml
+  tags: mounts
+  
+  
+- import_tasks: config_packages.yml
+  tags: config_packages
+    
+- import_tasks: clink.yml
+  tags: clink
+
+- import_tasks: bluetooth.yml
+  tags: bluetooth
+

@@ -1,0 +1,477 @@
+---
+
+#=======================#
+#           ALL         #
+#=======================#
+- name: Install and deploy configs on all containers
+  tags: install_config_packages
+  remote_user: root
+  hosts: containers
+  vars:
+    ansible_ssh_extra_args: '-o StrictHostKeyChecking=no'
+    packages:
+      epel-release:
+      helix: 
+        src: /home/me/Git/configs/tpad/helix
+        dest: /root/.config
+      bat: 
+        src: /home/me/Git/configs/tpad/bat
+        dest: /root/.config
+      ripgrep:
+      ncurses:
+      lsd:
+        src: /home/me/Git/configs/tpad/lsd
+        dest: /root/.config
+        bin: /home/me/Lab/bin/lsd
+      vivid:
+        src: /home/me/Git/configs/tpad/vivid
+        dest: /root/.config
+        bin: /home/me/Lab/bin/vivid
+
+  tasks:
+    - name: Install EPEPL
+      dnf:
+        name: epel-release
+        state: present
+          
+    - name: Enable crb
+      command: dnf config-manager --set-enabled crb
+
+    - name: Update all packages
+      dnf:
+        name: '*'
+        state: latest
+        update_cache: yes
+
+    - name: Deploy configs for bashrc
+      blockinfile:
+        path: "/root/.bashrc"
+        block: "{{ lookup('file', '/home/me/Git/configs/servers/bashrc_configs') }}"
+        marker_begin: ""
+        marker_end: ""
+
+    - name: Create the ".config" dir
+      file:
+        path: /root/.config
+        state: directory
+
+    - name: Install packages from EPEL
+      dnf:
+        name: "{{ item.key }}"
+        state: present
+      with_dict: "{{ packages }}"
+      when: item.key not in ["lsd", "vivid"]
+
+    - name: Install packages not available in EPEL
+      copy:
+        src: "{{ item.value.bin }}"
+        dest: "/usr/bin/{{ item.key }}"
+        mode: '0755'
+      with_dict: "{{ packages }}"
+      when: item.value.bin is defined
+    
+    - name: Copy configs
+      copy: 
+        src: "{{ item.value.src }}"
+        dest: "{{ item.value.dest }}"
+      with_dict: "{{ packages }}"
+      when: 
+        - item.value.src is defined
+        - item.value.dest is defined
+
+
+#=======================#
+#           GIT         #
+#=======================#
+- name: Configure git container
+  remote_user: root
+  hosts: git
+  vars:
+    ansible_ssh_extra_args: '-o StrictHostKeyChecking=no'
+  tags: git_config
+  
+  tasks:
+    - name: Install git
+      dnf:
+        name: git
+        state: present
+
+    - name: Create git user
+      user:
+        name: git
+        shell: /usr/bin/git-shell
+        home: /repos
+        create_home: yes
+
+    - name: Create SSH directory for git user
+      file:
+        path: /repos/.ssh
+        state: directory
+        mode: '0700'
+        owner: git
+        group: git
+
+    - name: Create authorized_keys file
+      file:
+        path: /repos/.ssh/authorized_keys
+        state: touch
+        mode: '0600'
+        owner: git
+        group: git
+
+        
+#=======================#
+#      MARIADB          #
+#=======================#
+- name: Configure Mariadb
+  remote_user: root
+  hosts: mariadb
+  tags: config_database
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+    ansible_ssh_extra_args: '-o StrictHostKeyChecking=no'
+  tasks:
+    - name: Install  python3-mysqlclient
+      dnf:
+        name:  python3-mysqlclient
+        state: present
+        
+    - name: Install mariaDB
+      dnf:
+        name: mariadb-server
+        state: present
+
+    - name: Enable mariadb
+      service:
+        name: mariadb
+        state: started
+        enabled: yes
+      
+
+    - name: Secure MariaDB installation
+      shell: |
+        mysql -e "UPDATE mysql.user SET Password = PASSWORD('') WHERE User = 'root';"
+        mysql -e "DELETE FROM mysql.user WHERE User='';"
+        mysql -e "DROP DATABASE test;"
+        mysql -e "FLUSH PRIVILEGES;"
+
+    - name: Create Baikal database
+      mysql_db:
+        name: baikal
+        state: present
+
+    - name: Create Baikal user with remote access
+      mysql_user:
+        name: baikal
+        password: 
+        host: calcurse
+        priv: 'baikal.*:ALL'  # Grant all privileges on the baikal database
+        state: present
+
+    - name: Ensure that MariaDB is listening on the correct interfaces
+      lineinfile:
+        path: /etc/my.cnf.d/mariadb-server.cnf
+        regexp: '^bind-address'
+        line: 'bind-address = 0.0.0.0'
+
+    - name: Enable and start mariadb service
+      service:
+        name: mariadb
+        state: started
+        enabled: yes
+
+
+#=======================#
+#       JOPLIN          #
+#=======================#
+- name: Configure Joplin
+  remote_user: root
+  hosts: joplin
+  tags: config_joplin
+  vars:
+    ansible_ssh_extra_args: '-o StrictHostKeyChecking=no'
+  tasks:
+    - name: Install Apache
+      dnf:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - httpd
+        - python3-setuptools
+        - python3-pip
+        - python3-passlib
+
+
+    - name: Config Joplin's dir
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: apache
+        group: apache
+        mode: '0755'
+        recurse: yes
+      loop:
+        - /var/www/html
+        - /var/www/html/sergiu
+
+    - name: Copy joplin.conf
+      copy:
+        src: /home/me/Git/configs/servers/joplin.conf
+        dest: /etc/httpd/conf.d
+        owner: apache
+        group: apache
+        mode: '0644' 
+
+    
+    - name: Config .htpasswd file
+      htpasswd:
+        path: /etc/httpd/.htpasswd
+        name: sergiu
+        password: 
+
+    - name: Set permission on htpasswd
+      file:
+        path: /etc/httpd/.htpasswd
+        owner: apache
+        group: apache
+        mode: '0640'
+
+    - name: Enable & start Apache
+      service:
+        name: httpd
+        state: started
+        enabled: yes
+
+
+
+#=======================#
+#          DNS          #
+#=======================#
+- name: Configure Dns
+  remote_user: root
+  hosts: dns  
+  tags: config_dns
+  vars:
+    ansible_ssh_extra_args: '-o StrictHostKeyChecking=no'
+  
+  tasks:
+    - name: Install dnsmasq
+      dnf:
+        name: dnsmasq
+        state: present
+        
+
+    - name: Deploy dnsmasq configs
+      copy:
+        src: /home/me/Git/configs/servers/dnsmasq/dnsmasq.conf
+        dest: /etc
+
+    - name: Ensure the systemd override directory exists
+      file:
+        path: /etc/systemd/system/dnsmasq.service.d
+        state: directory
+        mode: '0755'
+
+    - name: Create a systemd override file for dnsmasq
+      copy:
+        dest: /etc/systemd/system/dnsmasq.service.d/override.conf
+        content: |
+          [Unit]
+          After=network-online.target
+          Wants=network-online.target
+
+
+    - name: Set dns AAA records
+      blockinfile:
+        path: /etc/hosts
+        block: |
+          # Custom entries added by Ansible
+          192.168.1.2 architect zion pbs
+          192.168.1.3 matrix pve
+          192.168.1.4  calcurse
+          192.168.1.5  joplin
+          192.168.1.6  mariadb
+          192.168.1.7  git
+          192.168.1.8  dns
+          192.168.1.9  gotify
+          192.168.1.10 files
+          192.168.1.11 prometheus
+          192.168.1.12 grafana
+          192.168.1.19 tpad
+        marker: "# {mark} Ansible managed block"
+
+    - name: Enable & start dnsmasq
+      service:
+        name: dnsmasq
+        state: restarted
+        enabled: yes
+#=======================#
+#       CALCURSE        #
+#=======================#
+- name: Configure Calcurse
+  remote_user: root
+  hosts: calcurse  
+  tags: config_calcurse
+  vars:
+    ansible_ssh_extra_args: '-o StrictHostKeyChecking=no'
+  
+  tasks:
+    - name: Install Apache
+      dnf:
+        name: httpd
+        state: present
+
+    - name: Install Remi repository for PHP 8.0
+      dnf:
+        name: https://rpms.remirepo.net/enterprise/remi-release-9.rpm  
+        disable_gpg_check: True
+        state: present
+
+
+    - name: Enable Remi repository
+      command: dnf module enable php:remi-8.3 -y
+
+    - name: Install PHP and required extensions
+      dnf:
+        name:
+          - php-common
+          - php-cli
+          - php-gmp
+          - php-fpm
+          - php-curl
+          - php-intl
+          - php-pdo
+          - php-mbstring
+          - php-gd
+          - php-zip
+          - php-mysqli
+          - php-xml
+        state: present
+
+    - name: Config Baikal
+      copy:
+        src: /home/me/Lab/packages/baikal
+        dest: /var/www/html/
+        owner: apache
+        group: apache
+        mode: '0755'
+
+    - name: Set permissions on html dir
+      file:
+        path: /var/www/html
+        state: directory
+        owner: apache
+        group: apache
+        mode: '0755'
+        recurse: yes
+
+    - name: Copy baikal.conf
+      copy:
+        src: /home/me/Git/configs/servers/baikal.conf
+        dest: /etc/httpd/conf.d
+        owner: apache
+        group: apache
+        mode: '0644' 
+
+    - name: Enable & start Apache
+      service:
+        name: httpd
+        state: started
+        enabled: yes
+        
+#=======================#
+#        GOTIFY         #
+#=======================#
+- name: Configure Gotify
+  remote_user: root
+  hosts: gotify
+  tags: config_gotify
+  vars:
+    ansible_ssh_extra_args: '-o StrictHostKeyChecking=no'
+
+  tasks:
+    - name: Deploy the server binary
+      copy: 
+        src: /home/me/Lab/bin/gotify
+        dest: /usr/bin/gotify-server
+        mode: '0755'
+        
+    - name: Deploy the cli binary
+      copy: 
+        src: /home/me/Lab/bin/gotify-cli
+        dest: /usr/bin/gotify
+        mode: '0755'
+
+    - name: Deploy systemd service config file
+      copy:
+        src: /home/me/Git/configs/servers/systemd/gotify.service
+        dest: /etc/systemd/system
+        mode: '0755' 
+
+    - name: Reload systemd units
+      command:
+        systemctl daemon-reload
+        
+    - name: Enable & start Gotify
+      service:
+        name: gotify
+        state: started
+        enabled: yes
+        
+
+#=======================#
+#       PROMETHEUS      #
+#=======================#
+- name: Configure Prometheus
+  remote_user: root
+  hosts: prometheus
+  tags: config_prometheus
+  vars:
+    ansible_ssh_extra_args: '-o StrictHostKeyChecking=no'
+
+  tasks:
+    - name: Deploy the server binary
+      copy: 
+        src: /home/me/Lab/bin/prometheus
+        dest: /usr/bin/prometheus
+        mode: '0755'
+        
+    - name: Deploy systemd service unit file
+      copy:
+        src: /home/me/Git/configs/servers/systemd/prometheus.service
+        dest: /etc/systemd/system
+        mode: '0755' 
+        
+    - name: Reload systemd units
+      command:
+        systemctl daemon-reload
+        
+    - name: Deploy config file
+      copy:
+        src: /home/me/Git/configs/servers/prometheus.yml
+        dest: /root/
+        
+    - name: Enable & start Prometheus
+      service:
+        name: prometheus
+        state: started
+        enabled: yes
+
+#=======================#
+#         GRAFANA       #
+#=======================#
+- name: Configure Grafana
+  remote_user: root
+  hosts: grafana
+  tags: config_grafana
+  tasks:
+    - name: Install Grafana
+      dnf:
+        name: grafana
+        state: present
+    
+    - name: Enable service
+      service:
+        name: grafana-server
+        state: started
+        enabled: yes

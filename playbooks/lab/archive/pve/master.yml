@@ -1,0 +1,17 @@
+---
+
+- name: Configure PVE and the LXCs
+  hosts: pve
+  remote_user: root
+  tasks:
+    - name: Configure PVE
+      import_playbook: configure_pve.yml
+
+    - name: Initialize LXCs 
+      import_playbook: initialize_lxcs.yml
+
+    - name: Configure LXCs
+      import_playbook: configure_lxcs.yml
+
+    - name: Change PVE's nameserver
+      import_playbook: change_pve_dns.yml

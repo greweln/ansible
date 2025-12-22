@@ -1,0 +1,49 @@
+---
+- name: Deploy default configurations for lab environment hosts.
+  hosts: all
+  vars:
+    files:
+      - src: /root/configs/lab/.bashrc
+        dest: /root
+      - src: /root/configs/lab/.bash_profile
+        dest: /root
+      - src: /root/configs/lab/.profile
+        dest: /root
+      - src: /root/configs/tpad/helix
+        dest: /root/.config/
+      - src: /root/configs/tpad/lsd
+        dest: /root/.config/
+      - src: /root/configs/tpad/vivid
+        dest: /root/.config/
+
+    packages:
+      - hx
+      - ripgrep
+      - bat
+      - lsd
+      - vivid
+
+    dirs:
+      - /root/.config
+
+
+  tasks:
+    - name: Install packages
+      package:
+        name: "{{ packages }}"
+        state: present
+      tags: packages
+
+    - name: Create dirs
+      file:
+        path: "{{ item }}"
+      loop: "{{ dirs }}"
+      tags: dirs
+
+    - name: Deploy dots and config files
+      copy:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+      loop: "{{ files }}"
+      tags: files
+

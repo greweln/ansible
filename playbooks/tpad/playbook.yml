@@ -1,0 +1,29 @@
+# KICKSTART:
+#   - hostname
+#   - dns
+#   - ip
+#   - user me wheel
+
+# TODO:
+# - enable bluetooth
+# - github change key name(hostname_test)
+# - wifi
+# - print
+
+---
+- name: Configure laptop
+  hosts: tpad
+  vars_files:
+    - vars/global.yml
+
+  roles:
+  - role: system
+    tags: system_settings
+    become: yes
+
+  - role: packages
+    tags: install_packages
+
+ 
+  - role: user
+    tags: setup_user_env
