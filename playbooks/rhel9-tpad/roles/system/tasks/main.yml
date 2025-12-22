@@ -4,5 +4,8 @@
 - import_tasks: systemd.yml
   tags: systemd
 
+- import_tasks: subscription_register.yml
+  tags: register
+
 
 
