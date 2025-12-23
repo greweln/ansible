@@ -1,5 +1,5 @@
 - name: Enable CodeReady Builder repository
-  command:
+  ansible.builtin.command:
     cmd: subscription-manager repos --enable codeready-builder-for-rhel-9-{{ ansible_architecture }}-rpms
   become: true
   changed_when: false
@@ -14,14 +14,14 @@
 
 
 - name: Install EPEL
-  dnf:
+  ansible.builtin.dnf:
     name: "{{ epel_repo }}"
     state: present
   become: true
   tags: epel
 
 - name: Install RPM Fusion repositories
-  dnf:
+  ansible.builtin.dnf:
     name: "{{ rpmfusion_repos }}"
     state: present
     disable_gpg_check: yes
