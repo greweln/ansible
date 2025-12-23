@@ -5,7 +5,7 @@
         mode: '0700'
     
     - name: Generate SSH key
-      community.general.openssh_keypair:
+      community.crypto.openssh_keypair:
         path: "{{ ansible_env.HOME }}/.ssh/id_rsa"
         type: rsa
         size: 4096
