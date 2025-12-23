@@ -4,6 +4,8 @@ zion ansible_host=127.0.0.1 ansible_connection=local
 
 tpad ansible_connection=local
 
+# tpad ansible_host=192.168.1.180 ansible_user=me
+
 web ansible_host=web ansible_user=root
 
 [odroids]

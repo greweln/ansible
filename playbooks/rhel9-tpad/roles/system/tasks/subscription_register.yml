@@ -5,4 +5,4 @@
     password: "{{ rhel_subscription_password }}"
     auto_attach: true
   become: true
-  no_log: true  # This hides the decrypted password from logs/output
+  tags: subscription
