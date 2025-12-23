@@ -1,5 +1,5 @@
 - name: Build, deploy and configure Clink
-  command: make install
+  ansible.builtin.command: make install
   args:
     chdir: "{{ ansible_env.HOME }}/Git/clink"
   tags: clink

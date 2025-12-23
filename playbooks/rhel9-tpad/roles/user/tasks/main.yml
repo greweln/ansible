@@ -17,6 +17,6 @@
 - import_tasks: clink.yml
   tags: clink
 
-- import_tasks: bluetooth.yml
-  tags: bluetooth
+# - import_tasks: bluetooth.yml
+#   tags: bluetooth
 

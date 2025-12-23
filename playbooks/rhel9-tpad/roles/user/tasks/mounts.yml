@@ -1,5 +1,5 @@
 - name: Create .smbcredentials used in fstab containig the creds stored in vault.
-  copy:
+  ansible.builtin.copy:
     dest: "{{ ansible_env.HOME }}/.smbcredentials"
     content: |
       username={{ smb_username }}
@@ -9,7 +9,7 @@
 
 
 - name: Mount network shares
-  blockinfile:
+  ansible.builtin.blockinfile:
     path: /etc/fstab
     marker: "# {mark} ANSIBLE MANAGED CIFS/NFS ENTRIES"
     block: |
@@ -23,12 +23,12 @@
   tags: fstab
 
 - name: Reload systemd
-  command: systemctl daemon-reload
+  ansible.builtin.command: systemctl daemon-reload
   become: true
   tags: reload_systemd
 
 - name: Mount all filesystems (ignore errors)
-  command: mount -a
+  ansible.builtin.command: mount -a
   ignore_errors: yes
   become: true
   tags: mount

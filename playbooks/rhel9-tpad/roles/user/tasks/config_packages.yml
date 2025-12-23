@@ -2,7 +2,7 @@
   #   PREBUILD BINARIES
   # -------------------
 - name: Deploy other binaries
-  copy:
+  ansible.builtin.copy:
     src: "{{ ansible_env.HOME }}/Lab/bin/rhel/{{ item }}"
     dest: "{{ ansible_env.HOME  }}/bin"
     mode: '0755'
@@ -14,7 +14,7 @@
   #        ST
   # -------------------
 - name: Compile and install st terminal
-  command: make clean install
+  ansible.builtin.command: make clean install
   args:
     chdir: "/home/{{ user_name }}/.config/st"
   become: true        
@@ -24,7 +24,7 @@
   #      DMENU
   # -------------------
 - name: Compile and install dmenu
-  command: make clean install
+  ansible.builtin.command: make clean install
   args:
     chdir: "/home/{{ user_name }}/.config/dmenu"
   become: true        
@@ -34,7 +34,7 @@
   #   FERRIS
   # -------------------
 - name: Build, deploy Ferris
-  command: make install
+  ansible.builtin.command: make install
   args:
     chdir: "{{ ansible_env.HOME }}/Git/ferris"
   tags: ferris
@@ -43,7 +43,7 @@
   #   JOPLIN
   # -------------------
 - name: Install Joplin via npm
-  shell: |
+  ansible.builtin.shell: |
     NPM_CONFIG_PREFIX=$HOME/bin/joplin npm install --loglevel=error -g joplin
   args:
     creates: "{{ ansible_env.HOME }}/bin/joplin/bin/joplin" # avoid reinstalling
@@ -51,7 +51,7 @@
 
 
 - name: Sync Joplin
-  shell: |
+  ansible.builtin.shell: |
     export NVM_DIR="{{ ansible_env.HOME }}/.nvm"
     [ -s "$NVM_DIR/nvm.sh" ] && source "$NVM_DIR/nvm.sh"
     {{ ansible_env.HOME }}/bin/joplin/bin/joplin config sync.target 9
@@ -68,7 +68,7 @@
   #   CALCURSE
   # -------------------
 - name: Install Calcurse
-  shell: |
+  ansible.builtin.shell: |
     ./configure
     make
     make install
@@ -79,7 +79,7 @@
 
   
 - name: Configure Calcurse
-  command: |
+  ansible.builtin.command: |
     calcurse-caldav --init=two-way
   tags: calcurse
   
@@ -87,7 +87,7 @@
   #   GPASS
   # -------------------
 - name: Deploy Gpass
-  copy:
+  ansible.builtin.copy:
     src: "{{ ansible_env.HOME }}/Lab/gpass.json"
     dest: "{{ ansible_env.HOME }}"
     remote_src: true
@@ -99,5 +99,5 @@
   #   INSTALL YAZI
   # -------------------
 - name: Install Yazi
-  command: cargo install --force yazi-build
+  ansible.builtin.command: cargo install --force yazi-build
   tags: yazi
