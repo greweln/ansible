@@ -1,12 +1,13 @@
-    - name: Ensure .ssh directory exists
-      ansible.builtin.file:
-        path: "{{ ansible_env.HOME }}/.ssh"
-        state: directory
-        mode: '0700'
-    
-    - name: Generate SSH key
-      community.crypto.openssh_keypair:
-        path: "{{ ansible_env.HOME }}/.ssh/id_rsa"
-        type: rsa
-        size: 4096
-        force: yes
+- name: Ensure .ssh directory exists
+  ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/.ssh"
+    state: directory
+    mode: '0700'
+
+- name: Generate SSH keypair
+  ansible.builtin.command: >
+    ssh-keygen -t rsa -b 4096
+    -f {{ ansible_env.HOME }}/.ssh/id_rsa
+    -N ""
+  args:
+    creates: "{{ ansible_env.HOME }}/.ssh/id_rsa"

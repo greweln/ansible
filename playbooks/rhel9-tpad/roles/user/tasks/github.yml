@@ -3,25 +3,31 @@
     src: "{{ ansible_env.HOME }}/.ssh/id_rsa.pub"
   register: slurped_key
 
-- name: Decode the key
+- name: Decode and trim the key
   ansible.builtin.set_fact:
-    ssh_public_key: "{{ slurped_key.content | b64decode }}"  
+    # Adding | trim is vital to remove newlines that break JSON
+    ssh_public_key: "{{ slurped_key.content | b64decode | trim }}"
 
-# The 'github_token' and it's value  are encrypted in vault.
-- name: Upload SSH public key to GitHub
-  community.general.github_key:
-    token: "{{ github_token }}"
-    name: "Laptop key: {{ hostname_test }}"
-    pubkey: "{{ ssh_public_key }}"
-    state: present
-  tags: github_ssh
-
+- name: Upload SSH key to GitHub (best effort)
+  ansible.builtin.uri:
+    url: https://api.github.com/user/keys
+    method: POST
+    body_format: json
+    status_code: [201, 422] # 201 is created, 422 usually means key already exists
+    headers:
+      Authorization: "token {{ github_token }}"
+      Accept: "application/vnd.github+json"
+    body:
+      title: "Laptop key"
+      key: "{{ ssh_public_key }}"
+  register: github_response
+  failed_when: false
 
 - name: Create local git dirs
   ansible.builtin.file:
-    path: "{{ item.dest }}"
+    path: "{{ item.dest | dirname }}"
     state: directory
-    recurse: true
+    mode: '0755'
   loop: "{{ git_repos }}"
   tags: git_dirs
 
@@ -30,10 +36,10 @@
     repo: "{{ item.repo }}"
     dest: "{{ item.dest }}"
     version: "{{ item.branch }}"
-    force: yes             # ensures branch is checked out. Ferris depends on Penrose ferris branch
+    force: yes
     update: yes
     accept_hostkey: yes
+    # Use key_file instead of environment variables for built-in support
+    key_file: "{{ ansible_env.HOME }}/.ssh/id_rsa"
   loop: "{{ git_repos }}"
-  environment:
-    GIT_SSH_COMMAND: "ssh -i {{ ansible_env.HOME }}/.ssh/id_rsa -o StrictHostKeyChecking=no"
   tags: clone_repos

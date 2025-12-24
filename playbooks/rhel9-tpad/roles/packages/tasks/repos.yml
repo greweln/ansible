@@ -23,10 +23,3 @@
     state: present
     disable_gpg_check: yes
   tags: rpm_fusion
-
-
-- name: Enable Ansible collections
-  ansible.builtin.command: ansible-galaxy collection install "{{ item }}"
-  loop: "{{ ansible_collections }}"
-  changed_when: false
-  tags: ansible_collections  
