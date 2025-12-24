@@ -1,7 +1,6 @@
 - name: Enable CodeReady Builder repository
   ansible.builtin.command:
     cmd: subscription-manager repos --enable codeready-builder-for-rhel-9-{{ ansible_architecture }}-rpms
-  become: true
   changed_when: false
   tags: cbr
 
@@ -9,7 +8,6 @@
   ansible.builtin.rpm_key:
     state: present
     key: https://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-9
-  become: true
   tags: epel
 
 
@@ -17,7 +15,6 @@
   ansible.builtin.dnf:
     name: "{{ epel_repo }}"
     state: present
-  become: true
   tags: epel
 
 - name: Install RPM Fusion repositories
@@ -25,5 +22,11 @@
     name: "{{ rpmfusion_repos }}"
     state: present
     disable_gpg_check: yes
-  become: true
   tags: rpm_fusion
+
+
+- name: Enable Ansible collections
+  ansible.builtin.command: ansible-galaxy collection install "{{ item }}"
+  loop: "{{ ansible_collections }}"
+  changed_when: false
+  tags: ansible_collections  

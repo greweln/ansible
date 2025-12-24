@@ -1,0 +1,16 @@
+[Unit]
+Description=Lock the screen on sleep
+# Ensures the lock happens before the system actually suspends
+Before=sleep.target suspend.target
+
+[Service]
+User=me
+Type=simple
+Environment=DISPLAY=:0
+# i3lock needs the -n (no-fork) flag if you use Type=simple, 
+# or just run it normally.
+ExecStart=/usr/bin/i3lock -n -i /home/me/Git/ferris/screen_lock.png
+
+[Install]
+WantedBy=sleep.target suspend.target
+

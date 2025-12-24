@@ -1,19 +1,14 @@
-- name: Copy the screen-lock service file
-  ansible.builtin.copy:
-    src: /root/configs/tpad/systemd/screen-lock.service
-    dest: /etc/systemd/system/
+- name: Copy the screen-lock unit
+  copy:
+    src: screen-lock.service
+    dest: /etc/systemd/system/screen-lock.service
     mode: '0644'
-  become: yes
-  register: service_file_status
 
 - name: Reload systemd
-  ansible.builtin.systemd:
+  systemd:
     daemon_reload: yes
-  when: service_file_status.changed
-  become: yes
 
-- name: Ensure the service is enabled and started
-  ansible.builtin.systemd:
+- name: Enable screen-lock service
+  systemd:
     name: screen-lock.service
     enabled: yes
-  become: yes

@@ -4,5 +4,4 @@
     username: "{{ rhel_subscription_username }}"
     password: "{{ rhel_subscription_password }}"
     auto_attach: true
-  become: true
   tags: subscription

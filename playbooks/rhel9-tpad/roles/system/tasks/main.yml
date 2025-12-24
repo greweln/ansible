@@ -1,5 +1,5 @@
-# - import_tasks: subscription_register.yml
-#   tags: register
+- import_tasks: subscription_register.yml
+  tags: register
 
 - import_tasks: systemd.yml
   tags: systemd

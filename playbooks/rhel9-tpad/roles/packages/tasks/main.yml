@@ -1,4 +1,5 @@
 - import_tasks: repos.yml
+  become: yes
   tags: extra_repos
   
 - import_tasks: install.yml

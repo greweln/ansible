@@ -12,18 +12,21 @@
 
 ---
 - name: Configure laptop
-  hosts: tpad
+  hosts: localhost
+  connection: local
+  
   vars_files:
     - vars/global.yml
+    - vars/vault.yml
 
   roles:
-  - role: system
-    tags: system_settings
-    become: yes
+    - role: system
+      tags: system_settings
+      become: yes
 
-  - role: packages
-    tags: install_packages
+    - role: packages
+      tags: install_packages
 
  
-  - role: user
-    tags: setup_user_env
+    - role: user
+      tags: setup_user_env

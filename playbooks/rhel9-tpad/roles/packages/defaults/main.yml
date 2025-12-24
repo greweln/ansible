@@ -67,3 +67,6 @@ cargo_packages:
 rust_env:
   PATH: "{{ ansible_env.HOME }}/.cargo/bin:{{ ansible_env.PATH }}"
 
+ansible_collections:
+  - community.general
+  - community.crypto
