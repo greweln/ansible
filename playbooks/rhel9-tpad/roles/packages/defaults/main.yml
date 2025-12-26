@@ -22,6 +22,7 @@ system_packages:
   - gcc
   - cmake
   - ncurses-devel
+  - net-tools
 
 user_packages:
   - firefox
@@ -41,7 +42,8 @@ user_packages:
   - i3lock
   - xsetroot             # cursor shape
   - xinput               # touchpad
-  - xset
+  - xset                 # screen locking
+  - xsecurelock          # screen locker
   - xclip                # copy clipboard
   - xcb-util-image       # dep. xwallpaper
   - libXpm               # ---- || -------

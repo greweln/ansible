@@ -91,6 +91,7 @@ binaries:
   - gpass
   - feh                  # wallpaper setup, image viewer
   - dunst
+  - xss-lock
 
 
 # rust_env:
