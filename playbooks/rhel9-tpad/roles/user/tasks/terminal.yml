@@ -1,0 +1,6 @@
+- name: Compile and install st terminal
+  ansible.builtin.command: make clean install
+  args:
+    chdir: "/home/{{ user_name }}/.config/st"
+  become: true        
+  tags: st

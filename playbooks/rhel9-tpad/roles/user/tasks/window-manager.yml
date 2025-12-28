@@ -1,0 +1,6 @@
+- name: Build, deploy Ferris
+  ansible.builtin.command: make install
+  args:
+    chdir: "{{ ansible_env.HOME }}/Git/ferris"
+  environment: "{{ rust_env }}"
+  tags: ferris

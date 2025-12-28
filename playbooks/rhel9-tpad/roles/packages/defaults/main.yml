@@ -23,6 +23,8 @@ system_packages:
   - cmake
   - ncurses-devel
   - net-tools
+  - wget
+  - tcpdump
 
 user_packages:
   - firefox
@@ -36,6 +38,8 @@ user_packages:
   - mpd                  # RPM Fusion
   - brightnessctl
   - tree
+  - cups-client          # print
+  - simple-scan          # scan
   - usbutils             # lsusb
   - helix
   - imlib2               # feh req

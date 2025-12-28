@@ -1,0 +1,19 @@
+- name: Install Joplin via npm
+  ansible.builtin.shell: |
+    NPM_CONFIG_PREFIX=$HOME/bin/joplin npm install --loglevel=error -g joplin
+  args:
+    creates: "{{ ansible_env.HOME }}/bin/joplin/bin/joplin" # avoid reinstalling
+  tags: joplin
+
+- name: Sync Joplin
+  ansible.builtin.shell: |
+    export NVM_DIR="{{ ansible_env.HOME }}/.nvm"
+    [ -s "$NVM_DIR/nvm.sh" ] && source "$NVM_DIR/nvm.sh"
+    {{ ansible_env.HOME }}/bin/joplin/bin/joplin config sync.target 9
+    {{ ansible_env.HOME }}/bin/joplin/bin/joplin config sync.9.path http://web:22300
+    {{ ansible_env.HOME }}/bin/joplin/bin/joplin config sync.9.username "{{ joplin_username }}"
+    {{ ansible_env.HOME }}/bin/joplin/bin/joplin config sync.9.password "{{ joplin_password }}"
+    {{ ansible_env.HOME }}/bin/joplin/bin/joplin sync
+  args:
+    executable: /bin/bash
+  tags: joplin

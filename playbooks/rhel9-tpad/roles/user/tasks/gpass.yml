@@ -1,0 +1,6 @@
+- name: Deploy Gpass
+  ansible.builtin.copy:
+    src: "{{ ansible_env.HOME }}/Lab/gpass.json"
+    dest: "{{ ansible_env.HOME }}"
+    remote_src: true
+  tags: gpass

@@ -1,0 +1,6 @@
+- name: Compile and install dmenu
+  ansible.builtin.command: make clean install
+  args:
+    chdir: "/home/{{ user_name }}/.config/dmenu"
+  become: true        
+  tags: dmenu        

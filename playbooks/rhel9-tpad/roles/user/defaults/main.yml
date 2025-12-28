@@ -60,6 +60,8 @@ links:
     dest: "{{ ansible_env.HOME }}/.config/ferris"
   - src: "{{ ansible_env.HOME }}/Git/configs/tpad/lsd"
     dest: "{{ ansible_env.HOME }}/.config/lsd"
+  - src: "{{ ansible_env.HOME }}/Git/configs/tpad/autorandr"
+    dest: "{{ ansible_env.HOME }}/.config/autorandr"
   - src: "{{ ansible_env.HOME }}/Git/configs/tpad/helix" # get latest runtimes from github
     dest: "{{ ansible_env.HOME }}/.config/helix"
   - src: "{{ ansible_env.HOME }}/Git/configs/tpad/mpd"
@@ -92,9 +94,5 @@ binaries:
   - feh                  # wallpaper setup, image viewer
   - dunst
   - xss-lock
-
-
-# rust_env:
-#   HOME: /home/me
-#   PATH: "/home/me/.cargo/bin:/usr/local/bin:/usr/bin:/bin"
+  - autorandr
 

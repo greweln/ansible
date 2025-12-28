@@ -1,0 +1,15 @@
+- name: Install Calcurse
+  ansible.builtin.shell: |
+    ./configure
+    make
+    make install
+  become: yes
+  args:
+    chdir: "{{ user_home }}/Lab/packages/calcurse-4.8.2"
+  tags: calcurse
+
+  
+- name: Sync Calcurse
+  ansible.builtin.command: |
+    calcurse-caldav --init=two-way
+  tags: calcurse

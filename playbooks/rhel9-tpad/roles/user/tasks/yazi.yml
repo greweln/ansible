@@ -1,0 +1,4 @@
+- name: Install Yazi
+  ansible.builtin.command: cargo install --force yazi-build
+  environment: "{{ rust_env }}"
+  tags: yazi
