@@ -31,6 +31,19 @@
   loop: "{{ git_repos }}"
   tags: git_dirs
 
+# - name: Clone git repositories
+#   ansible.builtin.git:
+#     repo: "{{ item.repo }}"
+#     dest: "{{ item.dest }}"
+#     version: "{{ item.branch }}"
+#     force: yes
+#     update: yes
+#     accept_hostkey: yes
+#     # Use key_file instead of environment variables for built-in support
+#     key_file: "{{ ansible_env.HOME }}/.ssh/id_rsa"
+#   loop: "{{ git_repos }}"
+#   tags: clone_repos
+
 - name: Clone git repositories
   ansible.builtin.git:
     repo: "{{ item.repo }}"
@@ -39,7 +52,11 @@
     force: yes
     update: yes
     accept_hostkey: yes
-    # Use key_file instead of environment variables for built-in support
     key_file: "{{ ansible_env.HOME }}/.ssh/id_rsa"
   loop: "{{ git_repos }}"
+  register: git_clone_result
+  # Add these lines to handle the DNS "Name or service not known" error
+  until: git_clone_result is succeeded
+  retries: 5
+  delay: 3
   tags: clone_repos
