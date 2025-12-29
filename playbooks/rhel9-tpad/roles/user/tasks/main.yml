@@ -37,7 +37,10 @@
 - import_tasks: clink.yml
   tags: clink
 
-- import_tasks: printer.yml
-  tags: printer
+- import_tasks: print-scan.yml
+  tags: print-scan
+  
+- import_tasks: autorandr.yml
+  tags: autorandr
 
 

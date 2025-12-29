@@ -25,6 +25,9 @@ system_packages:
   - net-tools
   - wget
   - tcpdump
+  - nmap-ncat            # nc
+  - tree
+  - cups          # print
 
 user_packages:
   - firefox
@@ -37,13 +40,9 @@ user_packages:
   - mpv
   - mpd                  # RPM Fusion
   - brightnessctl
-  - tree
-  - cups-client          # print
-  - simple-scan          # scan
   - usbutils             # lsusb
   - helix
   - imlib2               # feh req
-  - i3lock
   - xsetroot             # cursor shape
   - xinput               # touchpad
   - xset                 # screen locking

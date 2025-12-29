@@ -12,8 +12,8 @@
 
 ---
 - name: Configure laptop
-  hosts: localhost
-  connection: local
+  hosts: tpad
+  # connection: local
   
   vars_files:
     - vars/global.yml

@@ -1,0 +1,20 @@
+- name: Install autorandr via pip for my user
+  ansible.builtin.pip:
+    name: autorandr
+    extra_args: --user
+  tags: autorandr
+
+
+- name: Copy autorandr binary to ~/bin
+  ansible.builtin.copy:
+    src: "{{ ansible_env.HOME }}/.local/bin/autorandr"
+    dest: "{{ ansible_env.HOME }}/bin/autorandr"
+    mode: '0755'
+    remote_src: yes
+  tags: autorandr
+
+- name: Remove the original binary from .local/bin
+  ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/.local/bin/autorandr"
+    state: absent
+  tags: autorandr

@@ -4,5 +4,4 @@
 
 user_name: me
 user_home: "/home/{{ user_name }}"
-hostname_test: "testing"
-edifier_mac: "60:F4:3A:4D:43:08"
+scanner_brother_ip: "192.168.1.45"

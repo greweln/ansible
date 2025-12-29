@@ -94,5 +94,4 @@ binaries:
   - feh                  # wallpaper setup, image viewer
   - dunst
   - xss-lock
-  - autorandr
 
