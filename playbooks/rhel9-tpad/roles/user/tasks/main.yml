@@ -7,8 +7,8 @@
 - import_tasks: files-structure.yml
   tags: files-structure
 
-- import_tasks: mounts.yml
-  tags: mounts
+- import_tasks: network-shares.yml
+  tags: network-shares
 
 - import_tasks: binaries.yml
   tags: binaries
