@@ -1,13 +1,29 @@
-- name: Ensure .ssh directory exists
-  ansible.builtin.file:
-    path: "{{ ansible_env.HOME }}/.ssh"
-    state: directory
-    mode: '0700'
+- name: Generate SSH keypair for user 'me'
+  community.crypto.openssh_keypair:
+    path: "{{ ansible_env.HOME }}/.ssh/id_rsa"
+    type: rsa
+    size: 4096
+    mode: '0600'
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+  register: ssh_keypair
 
-- name: Generate SSH keypair
-  ansible.builtin.command: >
-    ssh-keygen -t rsa -b 4096
-    -f {{ ansible_env.HOME }}/.ssh/id_rsa
-    -N ""
-  args:
-    creates: "{{ ansible_env.HOME }}/.ssh/id_rsa"
+
+
+- name: Upload SSH public key to GitHub (best effort)
+  ansible.builtin.uri:
+    url: https://api.github.com/user/keys
+    method: POST
+    body_format: json
+    status_code: [201, 422]  # 201 created, 422 key exists
+    headers:
+      Authorization: "token {{ github_token }}"
+      Accept: "application/vnd.github+json"
+    body:
+      title: "{{ github_key_name }}"
+      key: "{{ ssh_keypair.public_key }}"
+  delegate_to: localhost
+  failed_when: false
+
+
+

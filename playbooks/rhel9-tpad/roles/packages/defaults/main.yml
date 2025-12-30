@@ -5,7 +5,6 @@ rpmfusion_repos:
   - "https://mirrors.rpmfusion.org/free/el/rpmfusion-free-release-{{ ansible_distribution_major_version}}.noarch.rpm"
   - "https://mirrors.rpmfusion.org/nonfree/el/rpmfusion-nonfree-release-{{ansible_distribution_major_version }}.noarch.rpm"
 
-
 system_packages:  
   - "@base-x"
   - git
@@ -27,7 +26,10 @@ system_packages:
   - tcpdump
   - nmap-ncat            # nc
   - tree
-  - cups          # print
+  - cups
+  - sane-backends
+  - sane-backends-drivers-scanners
+
 
 user_packages:
   - firefox

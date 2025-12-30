@@ -1,3 +1,11 @@
-- import_tasks: subscription_register.yml
+- import_tasks: passwordless.yml
+  tags: passwordless
+  
+- import_tasks: subscription-register.yml
   tags: register
-
+  
+- import_tasks: services.yml
+  tags: services
+  
+- import_tasks: firewalld.yml
+  tags: firewalld

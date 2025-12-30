@@ -1,28 +1,3 @@
-- name: Slurp the SSH public key
-  ansible.builtin.slurp:
-    src: "{{ ansible_env.HOME }}/.ssh/id_rsa.pub"
-  register: slurped_key
-
-- name: Decode and trim the key
-  ansible.builtin.set_fact:
-    # Adding | trim is vital to remove newlines that break JSON
-    ssh_public_key: "{{ slurped_key.content | b64decode | trim }}"
-
-- name: Upload SSH key to GitHub (best effort)
-  ansible.builtin.uri:
-    url: https://api.github.com/user/keys
-    method: POST
-    body_format: json
-    status_code: [201, 422] # 201 is created, 422 usually means key already exists
-    headers:
-      Authorization: "token {{ github_token }}"
-      Accept: "application/vnd.github+json"
-    body:
-      title: "Tpad"
-      key: "{{ ssh_public_key }}"
-  register: github_response
-  failed_when: false
-
 - name: Create local git dirs
   ansible.builtin.file:
     path: "{{ item.dest | dirname }}"

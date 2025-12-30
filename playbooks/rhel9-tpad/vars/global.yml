@@ -5,3 +5,5 @@
 user_name: me
 user_home: "/home/{{ user_name }}"
 scanner_brother_ip: "192.168.1.45"
+wifi_ip: "192.168.1.15"
+github_key_name: "caca"

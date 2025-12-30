@@ -29,9 +29,6 @@ git_repos:
   - repo: git@github.com:greweln/ansible.git
     dest: "{{ ansible_env.HOME }}/Git/ansible"
     branch: main
-  - repo: git@github.com:greweln/prox-fetch.git
-    dest: "{{ ansible_env.HOME }}/Git/prox-fetch"
-    branch: main
 
 links:
   - src: "{{ ansible_env.HOME }}/Git/configs/tpad/.bashrc"
@@ -94,4 +91,4 @@ binaries:
   - feh                  # wallpaper setup, image viewer
   - dunst
   - xss-lock
-
+  - autorandr

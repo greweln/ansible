@@ -1,0 +1,6 @@
+- name: Enable and start CUPS
+  ansible.builtin.service:
+    name: cups
+    state: started
+    enabled: yes
+

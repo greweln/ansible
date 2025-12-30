@@ -1,12 +1,14 @@
-matrix ansible_host=matrix ansible_user=root
+matrix    ansible_host=192.168.1.3   ansible_user=root
 
-zion ansible_host=127.0.0.1 ansible_connection=local
+zion      ansible_host=127.0.0.1     ansible_user=root ansible_connection=local
+ 
+tpad      ansible_host=192.168.1.15  ansible_user=me
 
-# tpad ansible_connection=local
+web       ansible_host=192.168.1.4   ansible_user=root
 
-# tpad ansible_host=192.168.1.167 ansible_user=me
+kickstart ansible_host=192.168.1.5   ansible_user=root
 
-web ansible_host=web ansible_user=root
+cups      ansible_host=192.168.1.6   ansible_user=root
 
 [odroids]
 matrix
@@ -16,9 +18,11 @@ zion
 [physical]
 matrix
 zion
-# tpad
+tpad
 
 [virtual]
 web
+kickstart
+cups
 
 

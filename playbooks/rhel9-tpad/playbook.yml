@@ -1,20 +1,45 @@
+# TODO before production:
+# change hostname for github key
+# change ip
+
 ---
+# PLAY 1
 - name: Configure laptop
-  hosts: localhost
-  connection: local
-  
+  hosts: tpad
   vars_files:
     - vars/global.yml
     - vars/vault.yml
 
   roles:
     - role: system
-      tags: system_settings
+      tags: system-settings
       become: yes
 
     - role: packages
-      tags: install_packages
+      tags: install-packages
 
- 
     - role: user
-      tags: setup_user_env
+      tags: setup-user-env
+
+
+# PLAY 2
+- name: Deploy tpad's SSH key on all servers from ansible hosts file
+  hosts: all:!tpad
+  tags: deploy-ssh-key
+  gather_facts: false
+  tasks:
+    - name: Read tpad public key file
+      ansible.builtin.slurp:
+        src: /home/me/.ssh/id_rsa.pub
+      delegate_to: tpad
+      run_once: true
+      register: tpad_pubkey_file
+
+    - name: Authorize tpad public key for root
+      ansible.posix.authorized_key:
+        user: root
+        state: present
+        key: "{{ tpad_pubkey_file.content | b64decode }}"
+        manage_dir: true
+      become: true
+

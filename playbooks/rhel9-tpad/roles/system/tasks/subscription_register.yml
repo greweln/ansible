@@ -1,7 +1,0 @@
-- name: Register the host with RHEL
-  ansible.builtin.command: >
-    subscription-manager register
-      --username {{ rhel_subscription_username }}
-      --password {{ rhel_subscription_password }}
-      --auto-attach
-  tags: subscription

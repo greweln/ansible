@@ -1,20 +1,3 @@
-- name: Install print & scan packages
-  ansible.builtin.dnf:
-    name:
-      - cups
-      - simple-scan
-      - sane-backends
-      - sane-backends-drivers-scanners
-    state: present
-  become: yes
-
-- name: Enable and start CUPS
-  ansible.builtin.service:
-    name: cups
-    state: started
-    enabled: yes
-  become: yes
-
 - name: Copy the Brother scanner driver
   ansible.builtin.copy:
     src: /root/files/lab/packages/brscan4-0.4.11-1.x86_64.rpm
@@ -26,6 +9,7 @@
   ansible.builtin.dnf:
     name: /tmp/brscan4-0.4.11-1.x86_64.rpm
     state: present
+    disable_gpg_check: yes
   become: yes
 
 - name: Ensure the Brother backend is enabled in SANE

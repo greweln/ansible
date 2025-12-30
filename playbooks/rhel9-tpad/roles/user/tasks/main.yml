@@ -39,8 +39,7 @@
 
 - import_tasks: print-scan.yml
   tags: print-scan
-  
-- import_tasks: autorandr.yml
-  tags: autorandr
 
+- import_tasks: wifi.yml
+  tags: wifi
 
