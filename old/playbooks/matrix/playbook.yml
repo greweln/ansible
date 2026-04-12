@@ -1,0 +1,13 @@
+---
+
+- name: Prep a file with all ssh keys to be doployed on  LXCs and deploy LXCs
+  hosts: matrix
+  roles:
+    - lxc_base
+  tags: deploy_lxcs
+    
+- name: Configure LXCs
+  hosts: lxcs
+  roles:
+    - lxc_config
+  tags: config_lxcs

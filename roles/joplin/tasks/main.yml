@@ -1,0 +1,10 @@
+---
+- name: Package installation
+  import_tasks: install.yml
+
+- name: Apache configuration
+  import_tasks: apache.yml
+
+- name: Users setup
+  import_tasks: users.yml
+

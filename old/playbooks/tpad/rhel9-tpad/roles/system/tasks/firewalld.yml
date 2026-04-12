@@ -1,0 +1,6 @@
+- name: Add mDNS(scanner) service permanently
+  command: firewall-cmd --add-service=mdns --permanent
+
+- name: Reload firewalld to apply changes
+  command: firewall-cmd --reload
+

@@ -1,0 +1,52 @@
+# TODO before production:
+# change hostname for github key
+# change ip
+# * move fonts on lab not github
+---
+# PLAY 1
+- name: Configure laptop
+  hosts: tpad
+
+
+  pre_tasks:
+    - name: Enable passwordless sudo for bootstrap
+      ansible.builtin.import_role:
+        name: system
+        tasks_from: passwordless.yml
+      become: yes
+      tags: passwordless
+
+    - name: Register RHEL host early
+      ansible.builtin.import_role:
+        name: system
+        tasks_from: subscription-register.yml
+      become: yes
+      tags: register
+
+  roles:
+    - { role: packages,  tags: install-packages }
+    - { role: system,    tags: system-settings }
+    - { role: user,      tags: setup-user-env }
+
+
+# PLAY 2
+- name: Deploy tpad's SSH key on all servers from ansible hosts file
+  hosts: all:!tpad
+  tags: deploy-ssh-key
+  gather_facts: false
+  tasks:
+    - name: Read tpad public key file
+      ansible.builtin.slurp:
+        src: "{{ hostvars['tpad'].user_home }}/.ssh/id_rsa.pub"
+      delegate_to: tpad
+      run_once: true
+      register: tpad_pubkey_file
+
+    - name: Authorize tpad public key for root
+      ansible.posix.authorized_key:
+        user: root
+        state: present
+        key: "{{ tpad_pubkey_file.content | b64decode }}"
+        manage_dir: true
+      become: true
+

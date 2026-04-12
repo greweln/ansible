@@ -1,0 +1,9 @@
+{#
+This is a Jinja2 template.
+Templates allow you to generate configuration files using variables.
+#}
+
+# ----- ANSIBLE MANAGED -----
+[mysqld]
+bind-address = {{ mariadb_bind_address }}
+port = {{ mariadb_port }}

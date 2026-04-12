@@ -1,0 +1,11 @@
+- name: Install and start mariadb
+  import_tasks: install.yml
+  
+- name: Secure mariadb
+  import_tasks: secure.yml
+
+- name: Configure mariadb
+  import_tasks: config.yml
+
+- name: Configure firewalld
+  import_tasks: firewalld.yml

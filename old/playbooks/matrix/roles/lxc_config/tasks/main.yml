@@ -1,0 +1,47 @@
+- name: Install EPEPL
+  dnf:
+    name: epel-release
+    state: present
+
+- name: Enable crb
+  command: dnf config-manager --set-enabled crb
+
+- name: Update all packages
+  dnf:
+    name: '*'
+    state: latest
+    update_cache: yes
+    
+- name: Deploy configs for bashrc
+  blockinfile:
+    path: "/root/.bashrc"
+    block: "{{ lookup('file', '/root/ansible/playbooks/matrix/roles/lxc_config/files/main.yml') }}"
+    marker_begin: ""
+    marker_end: ""
+
+- name: Create the ".config" dir
+  file:
+    path: /root/.config
+    state: directory
+
+  
+- name: Install common packages
+  dnf:
+    name: "{{ lxc_common_packages }}"
+    state: present
+
+
+- name: Install binaries
+  copy:
+    src: "{{ item.value.src }}"
+    dest: "/usr/bin/{{ item.value.dest }}"
+    mode: '0755'
+  with_dict: "{{ binaries }}"
+
+- name: Copy configs
+  copy:
+    src: "{{ item.value.src }}"
+    dest: "{{ item.value.dest }}"
+  with_dict: "{{ config_common_files }}"
+   
+     

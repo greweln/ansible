@@ -1,8 +1,0 @@
-- name: Register the host with Red Hat
-  community.general.redhat_subscription:
-    state: present
-    username: "{{ rhel_subscription_username }}"
-    password: "{{ rhel_subscription_password }}"
-    auto_attach: yes
-  tags: subscription
-

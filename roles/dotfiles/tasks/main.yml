@@ -1,0 +1,11 @@
+- name: Create directories
+  import_tasks: create_directories.yml
+  tags: create_directories
+
+- name: Deploy dotfiles
+  import_tasks: deploy.yml
+  tags: deploy_dotfiles
+
+- name: Configure bashrc
+  import_tasks: bashrc.yml
+  tags: config_bashrc

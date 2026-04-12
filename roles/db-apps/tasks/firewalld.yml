@@ -1,0 +1,7 @@
+- name: Open MariaDB port if host is not an LXC container
+  ansible.posix.firewalld:
+    port: 3306/tcp
+    permanent: true
+    state: enabled
+    immediate: true
+  when: ansible_virtualization_type != "lxc" and ansible_os_family == "RedHat"

@@ -1,0 +1,17 @@
+- name: Create htpasswd for first user
+  command: htpasswd -bc /etc/httpd/webdav.passwd {{ joplin_users[0].name }} "{{ joplin_users[0].password }}"
+  no_log: true
+  when: joplin_users | length > 0
+
+- name: Add remaining users
+  command: htpasswd -b /etc/httpd/webdav.passwd {{ item.name }} "{{ item.password }}"
+  loop: "{{ joplin_users[1:] }}"
+  no_log: true
+  when: joplin_users | length > 1
+
+- name: Fix permissions on WebDAV password file
+  file:
+    path: /etc/httpd/webdav.passwd
+    owner: root
+    group: apache
+    mode: '0640'

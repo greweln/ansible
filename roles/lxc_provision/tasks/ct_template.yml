@@ -1,0 +1,18 @@
+# NOTE: I use hostvars['matrix'] because this playbook runs on localhost (Zion)
+# but the API credentials live in host_vars for Matrix.
+# By default, Ansible only loads vars for the host the playbook runs against,
+# so I need hostvars to get variables from the matrix host.
+
+- name: Download LXC template to Proxmox storage
+  community.proxmox.proxmox_template:
+    api_host: "{{ hostvars['matrix']['api_host'] }}"
+    api_user: "{{ hostvars['matrix']['api_user'] }}"
+    api_token_id: "{{ hostvars['matrix']['api_token_id'] }}"
+    api_token_secret: "{{ hostvars['matrix']['api_token'] }}"
+    node: "{{ hostvars['matrix']['node'] }}"
+    content_type: vztmpl
+    template: "{{ item }}" 
+    timeout: 120
+    storage: "{{ hostvars['matrix']['ct_template_storage'] }}"
+    state: present
+  loop: "{{ hostvars['matrix']['ct_templates'] }}"

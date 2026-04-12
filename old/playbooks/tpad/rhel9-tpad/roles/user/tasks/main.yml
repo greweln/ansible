@@ -1,0 +1,46 @@
+- import_tasks: ssh.yml
+  tags: ssh
+
+- import_tasks: github.yml
+  tags: github
+
+- import_tasks: files-structure.yml
+  tags: files-structure
+
+- import_tasks: network-shares.yml
+  tags: network-shares
+
+- import_tasks: binaries.yml
+  tags: binaries
+  
+- import_tasks: terminal.yml
+  tags: terminal
+  
+- import_tasks: app-launcher.yml
+  tags: app-launcher
+
+- import_tasks: window-manager.yml
+  tags: window-manager
+    
+- import_tasks: joplin.yml
+  tags: joplin
+  
+- import_tasks: calcurse.yml
+  tags: calcurse
+  
+- import_tasks: gpass.yml
+  tags: gpass
+  
+- import_tasks: yazi.yml
+  tags: yazi
+    
+- import_tasks: clink.yml
+  tags: clink
+
+- import_tasks: print-scan.yml
+  tags: print-scan
+
+
+- import_tasks: wifi.yml
+  tags: wifi
+

@@ -1,0 +1,8 @@
+---
+- name: Install Apache and WebDAV tools
+  dnf:
+    name:
+      - httpd
+      - httpd-tools
+    state: present
+

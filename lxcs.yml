@@ -1,0 +1,62 @@
+---
+
+- name: Create and setup LXCs ssh access 
+  hosts: localhost
+  tags: lxc_provision
+  roles:
+    - lxc_provision
+
+- name: Bootstrap LXCs
+  hosts: lxc
+  tags: bootstrap
+  roles:
+    - role: common_packages
+      tags: packages
+
+    - role: dotfiles
+      tags: dotfiles
+
+- name: Deploy Clink
+  hosts: lxc
+  vars:
+    clink_layout:
+      - lbrack
+      - hostname
+      - rbrack
+      - lbrack
+      - pwd
+      - permission
+      - rbrack
+      - lparen
+      - git
+      - rparen
+      - symbol
+    clink_hostname_style: green
+  tags: clink
+  roles:
+    - clink
+
+- name: Configure db-apps
+  hosts: db-apps
+  tags: db-apps
+  roles:
+    - db-apps
+
+- name: Configure Calcurse
+  hosts: calcurse
+  tags: calcurse
+  roles:
+    - calcurse
+
+- name: Configure Joplin
+  hosts: joplin
+  tags: joplin
+  roles:
+    - joplin
+
+- name: Configure Jellyfin
+  hosts: jellyfin
+  tags: jellyfin
+  roles:
+    - jellyfin
+

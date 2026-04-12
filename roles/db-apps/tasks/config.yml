@@ -1,0 +1,8 @@
+- name: Configure bind address
+  template:
+    src: bind.cnf.j2
+    dest: "{{ mariadb_config_dir }}/99-bind.cnf"
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart MariaDB

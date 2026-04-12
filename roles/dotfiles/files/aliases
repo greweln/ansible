@@ -1,0 +1,7 @@
+alias rm='rm -i'
+alias cp='cp -i'
+alias mv='mv -i'
+alias l='lsd -l'
+alias ll='lsd -la'
+alias c='clear'
+alias bat='bat --theme base16'

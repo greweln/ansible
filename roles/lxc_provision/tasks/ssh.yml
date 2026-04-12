@@ -1,0 +1,6 @@
+- name: Installs and enables SSH inside containers
+  shell: |
+    pct exec {{ hostvars[item]['vmid'] }} -- dnf install -y openssh-server
+    pct exec {{ hostvars[item]['vmid'] }} -- systemctl enable --now sshd
+  loop: "{{ groups['lxc'] }}"
+  delegate_to: matrix # need to delegate since the other plays are running on localhost(proxmox api)

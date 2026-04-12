@@ -1,0 +1,22 @@
+- name: Install MariaDB on RedHat
+  dnf:
+    name:
+      - mariadb-server
+      - python3-PyMySQL
+    state: present
+  when: ansible_os_family == "RedHat"
+
+- name: Install MariaDB on Debian
+  apt:
+    name:
+      - mariadb-server
+      - python3-pymysql
+    state: present
+    update_cache: yes
+  when: ansible_os_family == "Debian"
+
+- name: Enable and start MariaDB
+  service:
+    name: mariadb
+    state: started
+    enabled: yes

@@ -1,0 +1,5 @@
+- name: Create the ".config" dir
+  file:
+    path: /root/.config
+    state: directory
+

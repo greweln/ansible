@@ -1,0 +1,11 @@
+- name: Get the lxc CT template
+  import_tasks: ct_template.yml
+  tags: ct_template
+
+- name: Create lxcs
+  import_tasks: create.yml
+  tags: lxc_provision
+
+- name: Setup ssh
+  import_tasks: ssh.yml
+  tags: lxc_ssh

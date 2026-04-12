@@ -1,0 +1,37 @@
+# NOTE: I use hostvars['matrix'] because this playbook runs on localhost (Zion)
+# but the API credentials live in host_vars for Matrix.
+# By default, Ansible only loads vars for the host the playbook runs against,
+# so I need hostvars to get variables from the matrix host.
+
+- name: Create Proxmox LXC containers
+  community.proxmox.proxmox:
+    api_host: "{{ hostvars['matrix']['api_host'] }}"
+    api_user: "{{ hostvars['matrix']['api_user'] }}"
+    api_token_id: "{{ hostvars['matrix']['api_token_id'] }}"
+    api_token_secret: "{{ hostvars['matrix']['api_token'] }}"
+    vmid: "{{ hostvars[item]['vmid']}}"
+    hostname: "{{ item }}"
+    node: "{{ hostvars['matrix']['node'] }}"
+    password: "{{ hostvars['matrix']['lxc_password'] }}"
+    ostemplate: "{{ hostvars['matrix']['ct_template_storage'] }}:vztmpl/{{ hostvars[item].os_template | default(hostvars['matrix']['ct_default_template']) }}"
+    storage: "{{ hostvars['matrix']['storage'] }}"
+    cores: "{{ hostvars[item].cores | default(1) }}"
+    memory: "{{ hostvars[item].memory | default(1024) }}"
+    onboot: true
+    timezone: "host"
+    unprivileged: "{{ hostvars[item].unprivileged | default(true) }}"
+    netif:
+      net0: "name=eth0,bridge=vmbr0,ip={{ hostvars[item].ip }}/24,gw=192.168.1.1"
+    pubkey: "{{ hostvars['matrix']['authorized_ssh_keys'] | join('\n') }}"
+  loop: "{{ groups['lxc'] }}"
+
+- name: Start Proxmox LXC containers
+  community.proxmox.proxmox:
+    api_host: "{{ hostvars['matrix']['api_host'] }}"
+    api_user: "{{ hostvars['matrix']['api_user'] }}"
+    api_token_id: "{{ hostvars['matrix']['api_token_id'] }}"
+    api_token_secret: "{{ hostvars['matrix']['api_token'] }}"
+    vmid: "{{ hostvars[item]['vmid'] }}"
+    node: "{{ hostvars['matrix']['node'] }}"
+    state: started
+  loop: "{{ groups['lxc'] }}"

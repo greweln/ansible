@@ -1,0 +1,17 @@
+# ------- ANSIBLE MANAGED -------- #
+# Acess the url at: http://joplin
+
+Alias /data /var/www/html 
+
+<Directory /var/www/html>
+    DAV On
+
+    AuthType Basic
+    AuthName "Joplin WebDAV"
+    AuthUserFile /etc/httpd/webdav.passwd
+
+    Require valid-user
+
+    Options Indexes
+    AllowOverride None
+</Directory>

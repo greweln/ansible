@@ -1,0 +1,18 @@
+lxcs:
+  calcurse:
+    id: 107
+    hostname: calcurse
+    memory: 1024
+    ip: "192.168.1.7"
+
+  joplin:
+    id: 108
+    hostname: joplin
+    memory: 1024
+    ip: "192.168.1.8"
+
+  mariadb:
+    id: 104
+    hostname: mariadb
+    memory: 1024
+    ip: "192.168.1.4"

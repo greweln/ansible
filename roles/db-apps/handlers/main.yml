@@ -1,0 +1,12 @@
+# A handler is a special task that only runs when notified by another task.
+# If the file  /etc/my.cnf.d/99-bind.cnf:
+#   - changes → handler runs.
+#   - file is identical → nothing happens.
+# # ! handlers run at the end of the play, not immediately. This is very usefull since
+#     without handlers, each config change would restart services repeatedly.
+# 
+- name: Restart MariaDB
+  service:
+    name: mariadb
+    state: restarted
+    enabled: true

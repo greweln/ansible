@@ -1,0 +1,11 @@
+- name: Install Baikal along with its dependecies
+  import_tasks: install.yml
+  tags: calcurse_baikal
+
+- name: Configure the database
+  import_tasks: database.yml
+  tags: calcurse_database
+
+- name: Configure Nginx
+  import_tasks: nginx.yml
+  tags: calcurse_nginx

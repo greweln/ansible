@@ -1,0 +1,8 @@
+---
+# This is the main playbook (site.yml) meant to run all the playbooks
+# It won't apply for my case it's here for example
+- name: Bootstrap Tpad
+  import_playbook: tpad.yml
+
+- name: Orchestrate lxcs
+  import_playbook: lxcs.yml

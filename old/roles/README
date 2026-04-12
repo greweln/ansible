@@ -1,0 +1,4 @@
+Keep something to 'roles' if:
+- it is used in more than one playbook
+- it is not host-specific
+- it can logically be reused

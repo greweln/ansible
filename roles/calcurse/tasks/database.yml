@@ -1,0 +1,18 @@
+- name: Ensure Baïkal database exists
+  community.mysql.mysql_db:
+    name: "{{ baikal_db_name }}"
+    state: present
+    login_unix_socket: "{{ db_socket }}"
+  delegate_to: "{{ db_host }}"
+  run_once: true   # avoids multiple nodes trying to create DB
+
+- name: Ensure Baïkal database user exists
+  community.mysql.mysql_user:
+    name: "{{ baikal_db_user }}"
+    password: "{{ baikal_db_password }}"
+    priv: "{{ baikal_db_name }}.*:ALL"
+    host: "%"
+    state: present
+    login_unix_socket: "{{ db_socket }}"
+  delegate_to: "{{ db_host }}"
+  run_once: true

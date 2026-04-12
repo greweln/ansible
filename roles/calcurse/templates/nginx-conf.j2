@@ -1,0 +1,27 @@
+# ----- ANSIBLE MANAGED ----- #
+server {
+    listen 80;
+    server_name {{ ansible_hostname }};
+
+    root {{ baikal_install_dir }}/html;
+    index index.php;
+
+    # Rewrite rules for CalDAV/CardDAV discovery
+    rewrite ^/.well-known/caldav /dav.php redirect;
+    rewrite ^/.well-known/carddav /dav.php redirect;
+
+    location / {
+        try_files $uri $uri/ /index.php?$args;
+    }
+
+    location ~ ^(.+\.php)(.*)$ {
+        include fastcgi_params;
+        fastcgi_split_path_info ^(.+\.php)(.*)$;
+        fastcgi_pass unix:/run/php-fpm/www.sock;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        fastcgi_param PATH_INFO $fastcgi_path_info;
+    }
+
+    # Optional: Increase client body size for large calendar imports
+    client_max_body_size 20M;
+}

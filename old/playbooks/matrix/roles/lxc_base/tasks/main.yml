@@ -1,0 +1,71 @@
+- name: Download template
+  command: pveam download local "{{ rocky9 }}"
+
+- name: Check if LXC container exists
+  shell: pct status {{ item.value.id }} > /dev/null 2>&1
+  register: pct_status_check
+  failed_when: false
+  loop: "{{ lxcs | dict2items }}"
+
+- name: Get ssh keys to be deployed on lxcs
+  block:
+    - name: Get Tpad's key
+      slurp:
+        path: /home/me/.ssh/id_rsa.pub
+      register: tpad_key
+      delegate_to: tpad
+      run_once: true
+
+    - name: Get Zion's key
+      slurp:
+        path: /root/.ssh/id_rsa.pub
+      delegate_to: localhost
+      register: zion_key
+      run_once: true
+
+    - name: Combine all the keys
+      set_fact:
+        all_ssh_keys: |
+          {{ tpad_key.content | b64decode }}
+          {{ zion_key.content | b64decode }}
+
+    # Create a file with keys to be passed to the lxc
+    - name: Save the keys in a file on Matrix
+      copy:
+        dest: "/root/ssh_keys"
+        content: |
+          {{ all_ssh_keys }}
+        mode: '0600'
+
+- name: Create containers
+  shell: |
+    #  pct_status_check.results contains:
+    # {
+    #  "item": { "key": "calcurse", "value": { "vmid": 106, ... } },
+    #  "rc": 1,   # return code of the shell command
+    #  "stdout": "",
+    #  ...
+    # }
+    pct create {{ item.item.value.id }} \
+      local:vztmpl/"{{ rocky9 }}" \
+      --hostname {{ item.item.key }} \
+      --password {{ lxc_password }} \
+      --timezone host \
+      --storage local-lvm \
+      --memory {{ item.item.value.memory }} \
+      --onboot 1 \
+      --cores 1 \
+      --start 1 \
+      --net0 name=eth0,gw=192.168.1.1,ip={{ item.item.value.ip }}/24,bridge=vmbr0 \
+      --ssh-public-keys "/root/ssh_keys"
+  when: item.rc != 0
+  with_items: "{{ pct_status_check.results }}"
+
+- name: Install and configure the ssh service on the containers
+  shell: |
+    pct exec {{ item.value.id }} -- dnf install -y openssh-server
+    pct exec {{ item.value.id }} -- systemctl enable --now sshd
+  with_dict: "{{ lxcs }}"
+
+
+

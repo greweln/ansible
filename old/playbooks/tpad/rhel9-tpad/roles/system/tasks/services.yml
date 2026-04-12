@@ -1,0 +1,12 @@
+- name: Enable and start CUPS
+  ansible.builtin.service:
+    name: cups
+    state: started
+    enabled: yes
+
+- name: Enable and start tlp
+  ansible.builtin.service:
+    name: tlp
+    state: started
+    enabled: yes
+

@@ -1,0 +1,15 @@
+vmid: 107
+memory: 1024
+cores: 1
+ip: "192.168.1.7"
+
+baikal_db_name: baikal
+baikal_db_user: baikal
+
+db_host: db-apps
+db_socket: /var/lib/mysql/mysql.sock
+
+baikal_install_dir: /var/www/baikal
+baikal_download_dir: /tmp
+
+php_version: "8.5"

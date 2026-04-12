@@ -1,0 +1,28 @@
+# Common packages
+lxc_common_packages:
+  - epel-release
+  - helix
+  - bat
+  - ripgrep
+  - ncurses
+
+# Binaries(packages not available)
+binaries:
+  lsd:
+    src: /files/lab/bin/lsd
+    dest: lsd
+  vivid:
+    src: /files/lab/bin/vivid
+    dest: vivid
+  
+# Config files
+config_common_files:
+  helix:
+    src: /root/configs/tpad/helix
+    dest: /root/.config
+  lsd:
+    src: /root/configs/tpad/lsd
+    dest: /root/.config
+  vivid:
+    src: /root/configs/tpad/vivid
+    dest: /root/.config

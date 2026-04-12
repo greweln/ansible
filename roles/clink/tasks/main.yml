@@ -1,0 +1,128 @@
+- name: Install reqs
+  dnf:
+    name:
+      - gzip
+      - tar
+      - unzip
+    state: present
+
+
+- name: Detect libc type
+  command: ldd --version
+  register: ldd_output
+  changed_when: false
+
+
+- name: Determine libc variant
+  set_fact:
+    clink_variant: "{{ 'musl' if 'musl' in ldd_output.stdout else 'glibc' }}"
+
+
+- name: Query GitHub API for latest release
+  uri:
+    url: "https://api.github.com/repos/greweln/clink/releases/latest"
+    return_content: yes
+    headers:
+      Accept: application/vnd.github+json
+  register: latest_release
+
+
+- name: Select correct release asset
+  set_fact:
+    clink_asset: >-
+      {{
+        latest_release.json.assets
+        | selectattr('name', 'search', clink_variant)
+        | selectattr('name', 'search', 'tar.gz')
+        | first
+      }}
+
+
+- name: Create temporary working directory
+  tempfile:
+    state: directory
+    suffix: clink
+  register: clink_tmp
+
+
+- name: Download clink archive
+  get_url:
+    url: "{{ clink_asset.browser_download_url }}"
+    dest: "{{ clink_tmp.path }}/{{ clink_asset.name }}"
+    mode: "0644"
+
+
+- name: Extract archive
+  unarchive:
+    src: "{{ clink_tmp.path }}/{{ clink_asset.name }}"
+    dest: "{{ clink_tmp.path }}"
+    remote_src: true
+
+
+- name: Ensure clink config directory exists
+  file:
+    path: "{{ ansible_env.HOME }}/.config/clink"
+    state: directory
+    mode: "0755"
+
+
+- name: Deploy Clink config.toml
+  template:
+    src: config.toml.j2
+    dest: "{{ ansible_env.HOME }}/.config/clink/config.toml"
+    mode: "0644"
+
+- name: Copy config files
+  copy:
+    src: "{{ clink_tmp.path }}/clink-{{ clink_variant }}/update_cache.py"
+    dest: "{{ ansible_env.HOME }}/.config/clink/update_cache.py"
+    remote_src: true
+    mode: "0644"
+    force: no
+
+
+- name: Install Clink binary
+  copy:
+    src: "{{ clink_tmp.path }}/clink-{{ clink_variant }}/clink"
+    dest: /usr/local/bin/clink
+    remote_src: true
+    mode: "0755"
+
+
+- name: Set Clink as shell prompt
+  lineinfile:
+    path: "{{ ansible_env.HOME }}/.bashrc"
+    regexp: '^PS1='
+    line: "PS1='$(clink)'"
+    insertafter: EOF
+    state: present
+  tags: ps1
+
+
+- name: Ensure cache dir exists
+  file:
+    path: "{{ ansible_env.HOME }}/.cache"
+    state: directory
+    mode: "0755"
+
+
+- name: Ensure ~/.cache/clink file exists
+  file:
+    path: "{{ ansible_env.HOME }}/.cache/clink"
+    state: touch
+    mode: "0644"
+
+
+- name: Configure Clink cronjob
+  cron:
+    name: Clink cronjob
+    user: "{{ ansible_user_id }}"
+    minute: "*/5"
+    job: "/usr/bin/env python3 $HOME/.config/clink/update_cache.py"
+  tags: cron
+
+
+- name: Remove temporary Clink directory
+  file:
+    path: "{{ clink_tmp.path }}"
+    state: absent

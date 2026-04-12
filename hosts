@@ -1,28 +1,34 @@
-matrix    ansible_host=192.168.1.3   ansible_user=root
+# --- Individual Hosts ---
+matrix      ansible_host=192.168.1.3
+zion        ansible_host=127.0.0.1 ansible_connection=local
+tpad        ansible_host=192.168.1.20
 
-zion      ansible_host=127.0.0.1     ansible_user=root ansible_connection=local
- 
-tpad      ansible_host=192.168.1.15  ansible_user=me
+db_apps     ansible_host=192.168.1.4
+plex        ansible_host=192.168.1.5
+cups        ansible_host=192.168.1.6
+calcurse    ansible_host=192.168.1.7
+joplin      ansible_host=192.168.1.8
 
-web       ansible_host=192.168.1.4   ansible_user=root
-
-kickstart ansible_host=192.168.1.5   ansible_user=root
-
-cups      ansible_host=192.168.1.6   ansible_user=root
-
+# --- Groups ---
 [odroids]
 matrix
 zion
 
-
-[physical]
-matrix
-zion
+[workstations]
 tpad
 
-[virtual]
-web
-kickstart
+[db_servers]
+db-apps
+
+[app_servers]
+joplin
+calcurse
+jellyfin
+
+[utility_servers]
 cups
 
-
+# NOTE: utility server not added since they are already created and not provisioned throgh ansible
+[lxc:children]
+db_servers
+app_servers
