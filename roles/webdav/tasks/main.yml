@@ -1,0 +1,80 @@
+---
+- name: Install Apache (httpd)
+  ansible.builtin.dnf:
+    name:
+      - httpd
+      - python3-pip
+    state: present
+
+- name: Install passlib via pip
+  ansible.builtin.pip:
+    name: passlib
+    executable: pip3
+
+# Shared lock database directory
+- name: Ensure DAV lock directory exists
+  ansible.builtin.file:
+    path: "{{ webdav_lockdb | dirname }}"
+    state: directory
+    owner: "{{ webdav_user }}"
+    group: "{{ webdav_group }}"
+    mode: "0750"
+
+# Per-user directories on the shared NFS export
+- name: Ensure Joplin user directories exist
+  ansible.builtin.file:
+    path: "{{ webdav_path }}/{{ item.name }}"
+    state: directory
+    owner: "{{ webdav_user }}"
+    group: "{{ webdav_group }}"
+    mode: "0750"
+  loop: "{{ joplin_users }}"
+
+# WebDAV authentication file
+- name: Ensure WebDAV auth file exists
+  ansible.builtin.file:
+    path: /etc/httpd/webdav.passwd
+    state: touch
+    owner: root
+    group: apache
+    mode: "0640"
+
+- name: Set Joplin users
+  community.general.htpasswd:
+    path: /etc/httpd/webdav.passwd
+    name: "{{ item.name }}"
+    password: "{{ item.password }}"
+    crypt_scheme: bcrypt
+    state: present
+  loop: "{{ joplin_users }}"
+
+# Apache configuration
+- name: Deploy WebDAV configuration
+  ansible.builtin.template:
+    src: webdav.conf.j2
+    dest: /etc/httpd/conf.d/webdav.conf
+    owner: root
+    group: root
+    mode: "0644"
+  notify: reload httpd
+
+- name: Validate Apache configuration
+  ansible.builtin.command: httpd -t
+  register: apache_config_test
+  changed_when: false
+  failed_when: apache_config_test.rc != 0
+
+# Optional: only if you want Ansible to manage httpd
+- name: Manage Apache service
+  ansible.builtin.systemd:
+    name: httpd
+    enabled: "{{ webdav_service_enabled }}"
+    state: "{{ webdav_service_state }}"
+  when: webdav_manage_service
+
+- name: Allow HTTP service
+  ansible.posix.firewalld:
+    service: http
+    permanent: true
+    state: enabled
+    immediate: true

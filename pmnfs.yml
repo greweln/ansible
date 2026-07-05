@@ -1,0 +1,47 @@
+---
+
+- name: Bootstrap PMNFS
+  hosts: pmnfs
+  roles:
+    - role: update_os
+      tags: update_os
+      
+    - role: clink
+      tags: clink
+
+    # Deploy binaries and dotfiles
+    - role: baseline
+      tags: baseline
+
+    # Deploy Tpad's ssh pub key
+    - role: tpad_ssh_access
+      tags: tpad_ssh_access
+
+    # Install and enable qemu guest agent
+    - role: qemu_guest_agent
+      tags: qemu_guest_agent
+
+
+    # Install Node-exporter
+    - role: node_exporter
+      tags: node_exporter
+
+    # Set SELinux permissive mode
+    - role: selinux
+      tags: selinux
+    
+    # Subscribe host to RHEL
+    - role: rhel_subscription
+      tags: rhel_subscription
+
+    # Configure Pacemaker
+    - role: pacemaker
+      tags: pacemaker
+
+    # Install iscsi initiator
+    - role: iscsi
+      tags: iscsi
+
+    # Install multipath
+    - role: multipath
+      tags: multipath

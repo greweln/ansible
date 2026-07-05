@@ -1,0 +1,50 @@
+packages:
+  - ncurses
+
+
+binaries:
+  lsd:
+    src: /files/lab/bin/lsd
+    dest: /usr/bin/lsd
+  vivid:
+    src: /files/lab/bin/vivid
+    dest: /usr/bin/vivid
+
+  helix:
+    src: /files/lab/bin/hx
+    dest: /usr/bin/hx
+
+  bat:
+    src: /files/lab/bin/bat
+    dest: /usr/bin/bat
+  
+  ripgrep:
+    src: /files/lab/bin/rg
+    dest: /usr/bin/rg
+
+dotfiles:
+  helix:
+    src: /root/configs/tpad/helix
+    dest: /root/.config
+  lsd:
+    src: /root/configs/tpad/lsd
+    dest: /root/.config
+  vivid:
+    src: /root/configs/tpad/vivid
+    dest: /root/.config
+
+clink_hostname_style: green
+
+clink_layout:
+    - lbrack
+    - hostname
+    - rbrack
+    - lbrack
+    - pwd
+    - permission
+    - rbrack
+    - lparen
+    - git
+    - rparen
+    - symbol
+

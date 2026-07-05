@@ -9,3 +9,7 @@
 - name: Configure bashrc
   import_tasks: bashrc.yml
   tags: config_bashrc
+
+- name: Set hostname
+  import_tasks: hostname.yml
+  tags: hostname

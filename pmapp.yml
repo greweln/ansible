@@ -1,0 +1,47 @@
+---
+
+- name: Bootstrap PMAPP
+  hosts: pmapp
+  roles:
+    # Register subscription
+    - role: rhel_subscription
+      tags: rhel_subscription
+
+    - role: update_os
+      tags: update_os
+
+    # Set SELinux permissive mode
+    - role: selinux
+      tags: selinux
+      
+    - role: clink
+      tags: clink
+
+    # Deploy binaries and dotfiles
+    - role: baseline
+      tags: baseline
+
+    # Deploy Tpad's ssh pub key
+    - role: tpad_ssh_access
+      tags: tpad_ssh_access
+
+    # Install and enable qemu guest agent
+    - role: qemu_guest_agent
+      tags: qemu_guest_agent
+
+    # Install Webdav
+    - role: webdav
+      tags: nodes_webdav
+
+    # Install Baikal
+    - role: baikal
+      tags: nodes_baikal
+
+
+    # Install Pacemaker
+    - role: pacemaker
+      tags: pacemaker
+    
+    # Config watchdog sbd
+    - role: fence_sbd_watchdog
+      tags: fence_sbd_watchdog

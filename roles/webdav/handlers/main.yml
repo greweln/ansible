@@ -1,0 +1,6 @@
+---
+- name: reload httpd
+  ansible.builtin.systemd:
+    name: httpd
+    state: reloaded
+  when: webdav_manage_service

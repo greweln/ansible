@@ -1,0 +1,15 @@
+---
+
+- name: Bootstrap KVM server
+  hosts: kvm
+  roles:
+    - role: clink
+      tags: clink
+
+    # Deploy binaries and dotfiles
+    - role: baseline
+      tags: baseline
+
+    # Set permissive SELinux
+    - role: selinux
+      tags: selinux

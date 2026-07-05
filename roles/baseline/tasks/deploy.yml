@@ -1,0 +1,12 @@
+- name: Copy configs
+  copy:
+    src: "{{ item.value.src }}"
+    dest: "{{ item.value.dest }}"
+  loop: "{{ dotfiles | dict2items }}"
+
+- name: Copy binaries
+  copy:
+    src: "{{ item.value.src }}"
+    dest: "{{ item.value.dest }}"
+    mode: '0755'
+  loop: "{{ binaries | dict2items }}"

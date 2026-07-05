@@ -1,0 +1,19 @@
+---
+
+- name: Bootstrap 
+  hosts: servers
+  roles:
+    - role: update_os
+      tags: update_os
+      
+    - role: clink
+      tags: clink
+
+    # Deploy binaries and dotfiles
+    - role: baseline
+      tags: baseline
+
+    # Deploy Tpad's ssh pub key
+    - role: tpad_ssh_access
+      tags: tpad_ssh_access
+

@@ -1,0 +1,4 @@
+- name: Deploy Apache config
+  template:
+    src: apache-conf.j2
+    dest: /etc/httpd/conf.d/baikal.conf

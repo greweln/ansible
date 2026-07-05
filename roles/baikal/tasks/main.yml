@@ -1,0 +1,8 @@
+- name: Install Baikal along with its dependecies
+  import_tasks: install.yml
+  tags: install_baikal
+
+
+- name: Configure Apache
+  import_tasks: apache.yml
+  tags: config_apache

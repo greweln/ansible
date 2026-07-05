@@ -1,34 +1,36 @@
-# --- Individual Hosts ---
-matrix      ansible_host=192.168.1.3
-zion        ansible_host=127.0.0.1 ansible_connection=local
-tpad        ansible_host=192.168.1.20
-
-db_apps     ansible_host=192.168.1.4
-plex        ansible_host=192.168.1.5
-cups        ansible_host=192.168.1.6
-calcurse    ansible_host=192.168.1.7
-joplin      ansible_host=192.168.1.8
-
-# --- Groups ---
-[odroids]
-matrix
-zion
-
 [workstations]
-tpad
+tpad      ansible_host=192.168.1.20
 
-[db_servers]
-db-apps
+[physical]
+infra     ansible_host=127.0.0.1 ansible_connection=local
+kvm       ansible_host=192.168.1.3
 
-[app_servers]
-joplin
-calcurse
-jellyfin
+[pmapp]
+pmapp1   ansible_host=192.168.1.5
+pmapp2   ansible_host=192.168.1.6
+pmapp3   ansible_host=192.168.1.7
 
-[utility_servers]
-cups
+[pmnfs]
+pmnfs1    ansible_host=192.168.1.11
+pmnfs2    ansible_host=192.168.1.12
 
-# NOTE: utility server not added since they are already created and not provisioned throgh ansible
-[lxc:children]
-db_servers
-app_servers
+[backend]
+storray    ansible_host=192.168.1.13
+
+[pmqd]
+pmqd       ansible_host=192.168.1.8
+
+[pacemaker:children]
+pmapp
+pmnfs
+pmqd
+
+[virtual:children]
+pmapp
+pmnfs
+pmqd
+backend
+
+[servers:children]
+physical
+virtual

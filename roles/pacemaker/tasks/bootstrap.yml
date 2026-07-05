@@ -1,0 +1,23 @@
+---
+- name: Check if cluster already exists (corosync)
+  ansible.builtin.stat:
+    path: /etc/corosync/corosync.conf
+  register: corosync_conf
+
+- name: Setup Pacemaker cluster (only first install)
+  ansible.builtin.command: >
+    pcs cluster setup {{ cluster_name }} --start {{ cluster_nodes | join(' ') }}
+  when: not corosync_conf.stat.exists
+  register: pcs_setup
+  changed_when: "'Cluster has been successfully set up' in pcs_setup.stdout"
+  run_once: true
+
+- name: Enable cluster on all nodes
+  ansible.builtin.command: pcs cluster enable --all
+  register: pcs_enable
+  changed_when: "'enabled' in pcs_enable.stdout"
+
+- name: Start cluster on all nodes
+  ansible.builtin.command: pcs cluster start --all
+  register: pcs_start
+  changed_when: "'Started' in pcs_start.stdout"

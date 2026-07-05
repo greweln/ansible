@@ -1,0 +1,29 @@
+Alias {{ webdav_alias }} {{ webdav_path }}
+
+DavLockDB {{ webdav_lockdb }}
+
+<Directory {{ webdav_lockdb | dirname }}>
+    Require all denied
+</Directory>
+
+# IMPORTANT: DO NOT require auth here
+# This must only allow traversal
+<Directory {{ webdav_path }}>
+    DAV On
+    Options Indexes
+    AllowOverride None
+
+    Require all granted
+</Directory>
+
+{% for user in joplin_users %}
+<Directory {{ webdav_path }}/{{ user.name }}>
+    DAV On
+
+    AuthType Basic
+    AuthName "Joplin - {{ user.name }}"
+    AuthUserFile /etc/httpd/webdav.passwd
+
+    Require user {{ user.name }}
+</Directory>
+{% endfor %}

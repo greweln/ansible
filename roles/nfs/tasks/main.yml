@@ -1,0 +1,48 @@
+---
+
+- name: Install NFS packages
+  ansible.builtin.dnf:
+    name:
+      - nfs-utils
+    state: present
+
+- name: Create export directories
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  loop: "{{ nfs_exports }}"
+  when: not pacemaker_managed
+
+- name: Configure /etc/exports
+  ansible.builtin.template:
+    src: exports.j2
+    dest: /etc/exports
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Reload NFS exports
+  when: not pacemaker_managed
+
+- name: Enable and start NFS services
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    enabled: true
+    state: started
+  loop:
+    - rpcbind
+    - nfs-server
+  when: not pacemaker_managed
+
+- name: Configure firewall services
+  ansible.posix.firewalld:
+    service: "{{ item }}"
+    permanent: true
+    state: enabled
+    immediate: true
+  loop:
+    - nfs
+    - mountd
+    - rpc-bind

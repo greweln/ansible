@@ -89,15 +89,18 @@
     mode: "0755"
 
 
-- name: Set Clink as shell prompt
+- name: Remove existing PS1 definitions
   lineinfile:
     path: "{{ ansible_env.HOME }}/.bashrc"
     regexp: '^PS1='
+    state: absent
+
+- name: Add Clink as last line in bashrc
+  lineinfile:
+    path: "{{ ansible_env.HOME }}/.bashrc"
     line: "PS1='$(clink)'"
     insertafter: EOF
     state: present
-  tags: ps1
-
 
 - name: Ensure cache dir exists
   file:

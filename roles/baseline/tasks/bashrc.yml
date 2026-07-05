@@ -1,5 +1,5 @@
 - name: Deploy aliases for bashrc
   blockinfile:
     path: "/root/.bashrc"
-    block: "{{ lookup('file', '/root/ansible/roles/dotfiles/files/aliases') }}"
+    block: "{{ lookup('file', '/root/ansible/roles/baseline/files/aliases') }}"
     marker: "# --- ANSIBLE MANAGED ---"

@@ -1,0 +1,120 @@
+- name: Install EPEL repository
+  dnf:
+    name: "https://dl.fedoraproject.org/pub/epel/{{ epel_release }}"
+    state: present
+    disable_gpg_check: true
+
+    
+- name: Install Remi repository RPM
+  dnf:
+    name: "https://rpms.remirepo.net/enterprise/{{ remi_release }}"
+    disable_gpg_check: true
+    state: present
+
+- name: Enable PHP module from Remi
+  dnf:
+    name: "@php:remi-{{ php_version }}"
+    state: present
+
+- name: Install PHP, Apache, and Baïkal dependencies
+  dnf:
+    name:
+      - httpd
+      - php
+      - php-fpm
+      - php-xml
+      - php-mbstring
+      - php-cli
+      - unzip
+    state: present
+
+- name: Get latest Baïkal release
+  uri:
+    url: https://api.github.com/repos/sabre-io/Baikal/releases/latest
+    return_content: yes
+    headers:
+      Accept: "application/vnd.github+json"
+  register: baikal_release
+
+- name: Set Baïkal version
+  set_fact:
+    baikal_version: "{{ baikal_release.json.tag_name }}"
+
+- name: Download Baïkal
+  get_url:
+    url: "https://github.com/sabre-io/Baikal/releases/download/{{ baikal_version }}/baikal-{{ baikal_version }}.zip"
+    dest: /tmp/baikal.zip
+    mode: '0644'
+
+- name: Ensure Baïkal directory exists
+  file:
+    path: "{{ baikal_path }}"
+    state: directory
+    owner: apache
+    group: apache
+    mode: '0775'
+
+- name: Extract Baïkal
+  unarchive:
+    src: /tmp/baikal.zip
+    dest: "{{ baikal_path }}"
+    remote_src: yes
+
+- name: Set permissions Baïkal ownership recursively
+  file:
+    path: "{{ baikal_path }}"
+    owner: apache
+    group: apache
+    recurse: yes
+    
+- name: Remove temporary Baïkal archive
+  file:
+    path: /tmp/baikal.zip
+    state: absent
+
+    
+- name: Configure php-fpm to run as apache
+  lineinfile:
+    path: /etc/php-fpm.d/www.conf
+    regexp: '^user ='
+    line: 'user = apache'
+
+- name: Configure php-fpm group
+  lineinfile:
+    path: /etc/php-fpm.d/www.conf
+    regexp: '^group ='
+    line: 'group = apache'
+
+- name: Configure php-fpm listen owner
+  lineinfile:
+    path: /etc/php-fpm.d/www.conf
+    regexp: '^listen.owner ='
+    line: 'listen.owner = apache'
+
+- name: Configure php-fpm listen group
+  lineinfile:
+    path: /etc/php-fpm.d/www.conf
+    regexp: '^listen.group ='
+    line: 'listen.group = apache'
+
+- name: Ensure PHP session directory permissions
+  file:
+    path: /var/lib/php/session
+    owner: apache
+    group: apache
+    mode: "0770"
+    state: directory
+
+- name: Manage Apache service
+  ansible.builtin.systemd:
+    name: httpd
+    state: "{{ baikal_service_state }}"
+    enabled: "{{ baikal_service_enabled }}"
+  when: baikal_manage_service
+
+- name: Manage php-fpm service
+  ansible.builtin.systemd:
+    name: php-fpm
+    state: "{{ baikal_php_fpm_service_state }}"
+    enabled: "{{ baikal_php_fpm_service_enabled }}"
+  when: baikal_manage_service

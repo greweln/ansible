@@ -1,0 +1,21 @@
+- name: Ensure the .ssh dir exists
+  file:
+    path: "/root/.ssh"
+    state: directory
+    owner: "root"
+    group: "root"
+    mode: "0700"
+
+- name: Deploy the ssh pub key
+  lineinfile:
+    path: /root/.ssh/authorized_keys
+    line: "{{ lookup('file', 'ssh_keys/tpad_sergiu.pub') }}"
+    create: yes
+    mode: '0600'
+
+- name: Set correct permissions on authorized_keys
+  file:
+    path: "/root/.ssh/authorized_keys"
+    owner: "root"
+    group: "root"
+    mode: '0600'

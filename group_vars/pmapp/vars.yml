@@ -1,0 +1,23 @@
+baikal_path: /pmnfs/baikal
+baikal_manage_service: false
+
+webdav_alias: /
+webdav_path: /pmnfs/joplin
+webdav_lockdb: /var/lib/dav/lockdb
+webdav_manage_service: false
+webdav_service_enabled: false
+webdav_service_state: stopped
+joplin_users:
+  - name: sergiu
+    password: "{{ vault_sergiu_password }}"
+  - name: katy
+    password: "{{ vault_katy_password }}"
+
+cluster_name: pmapp
+
+cluster_nodes:
+  - pmapp-1
+  - pmapp-2
+  - pmapp-3
+
+qdevice_host: pmqd

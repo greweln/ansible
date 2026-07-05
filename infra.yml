@@ -1,0 +1,11 @@
+---
+
+- name: Bootstrap 'infra' server
+  hosts: localhost
+  roles:
+    - role: clink
+      tags: clink
+
+    # Deploy binaries and dotfiles
+    - role: baseline
+      tags: baseline

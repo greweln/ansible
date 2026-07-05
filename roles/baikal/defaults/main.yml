@@ -1,0 +1,3 @@
+baikal_alias: /calcurse
+baikal_path: /var/www/baikal
+php_version: "8.5"

@@ -1,0 +1,3 @@
+webdav_lockdb: /var/lib/dav/lockdb
+webdav_user: apache
+webdav_group: apache
