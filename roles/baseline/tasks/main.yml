@@ -1,15 +1,45 @@
+- name: Enable EPEL
+  ansible.builtin.import_tasks: repos.yml
+  tags: add_repos
+
+- name: Install packages
+  ansible.builtin.import_tasks: packages.yml
+  tags: install_packages
+
 - name: Create directories
-  import_tasks: create_directories.yml
+  ansible.builtin.import_tasks: create_directories.yml
   tags: create_directories
 
 - name: Deploy dotfiles
-  import_tasks: deploy.yml
+  ansible.builtin.import_tasks: deploy.yml
   tags: deploy_dotfiles
 
-- name: Configure bashrc
-  import_tasks: bashrc.yml
-  tags: config_bashrc
+- name: Configure aliases
+  ansible.builtin.import_tasks: aliases.yml
+  tags: config_aliases
+
+- name: Set LS_COLORS via vivid
+  ansible.builtin.import_tasks: ls_colors.yml
+  tags: ls_colors
+
+- name: Set COLORTERM
+  ansible.builtin.import_tasks: truecolor.yml
+  tags: truecolor
 
 - name: Set hostname
-  import_tasks: hostname.yml
-  tags: hostname
+  ansible.builtin.import_tasks: hostname.yml
+  tags: set_hostname
+
+- name: Install and configure Clink
+  ansible.builtin.import_tasks: clink.yml
+  tags: clink
+
+- name: Configure MOTDs
+  ansible.builtin.import_tasks: motd.yml
+  tags: motd
+
+- name: Deploy ldap certificate
+  ansible.builtin.import_tasks: ldap_cert.yml
+
+- name: Deploy sssd.conf
+  ansible.builtin.import_tasks: sssd.yml

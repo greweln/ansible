@@ -1,0 +1,9 @@
+---
+
+- name: Deploy LDAP CA certificate to target nodes
+  ansible.builtin.copy:
+    src: files/ca-cert.pem
+    dest: /etc/openldap/certs/ca-cert.pem
+    owner: root
+    group: root
+    mode: '0644'

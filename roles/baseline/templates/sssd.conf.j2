@@ -1,0 +1,47 @@
+[sssd]
+config_file_version = 2
+services = nss, pam, autofs
+domains = greweln.home
+
+[domain/greweln.home]
+# Identity & Auth Providers
+id_provider = ldap
+auth_provider = ldap
+autofs_provider = ldap
+
+# Connection Settings (Plain LDAP on 389 with StartTLS)
+ldap_uri = ldap://infra.greweln.home:389
+ldap_search_base = dc=greweln,dc=home
+ldap_id_use_start_tls = true
+
+# Service Account Bind
+ldap_default_bind_dn = cn=admin,dc=greweln,dc=home
+ldap_default_authtok = {{ ldap_bind_password }}
+
+# User Configuration
+ldap_user_search_base = ou=People,dc=greweln,dc=home
+ldap_user_object_class = posixAccount
+ldap_user_name = uid
+
+# Group Configuration
+ldap_group_search_base = ou=Group,dc=greweln,dc=home
+ldap_group_object_class = posixGroup
+ldap_group_name = cn
+
+# Automount Configuration
+ldap_autofs_search_base = ou=Automount,dc=greweln,dc=home
+ldap_autofs_map_object_class = automountMap
+ldap_autofs_entry_object_class = automount
+ldap_autofs_map_name = ou
+ldap_autofs_entry_key = cn
+ldap_autofs_entry_value = automountInformation
+
+# Miscellaneous
+ldap_pwd_policy = none
+cache_credentials = true
+enumerate = false
+lookup_family_order = ipv4_only
+
+# TLS / CA Certificate Configuration
+ldap_tls_cacert = /etc/openldap/certs/ca-cert.pem
+ldap_tls_reqcert = hard

@@ -1,0 +1,5 @@
+- name: Set LS_COLORS via vivid
+  ansible.builtin.copy:
+    dest: /etc/profile.d/lscolors.sh
+    mode: '0644'
+    content: 'export LS_COLORS="$(vivid generate {{ vivid_theme }})"'

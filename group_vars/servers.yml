@@ -1,26 +1,16 @@
 packages:
+  - nfs-utils
+  - autofs
+  - sssd
+  - sssd-ldap
+  - sssd-tools
+  - openldap-clients
+  - oddjob-mkhomedir
   - ncurses
-
-
-binaries:
-  lsd:
-    src: /files/lab/bin/lsd
-    dest: /usr/bin/lsd
-  vivid:
-    src: /files/lab/bin/vivid
-    dest: /usr/bin/vivid
-
-  helix:
-    src: /files/lab/bin/hx
-    dest: /usr/bin/hx
-
-  bat:
-    src: /files/lab/bin/bat
-    dest: /usr/bin/bat
-  
-  ripgrep:
-    src: /files/lab/bin/rg
-    dest: /usr/bin/rg
+  - ripgrep
+  - lsd
+  - helix
+  - bat
 
 dotfiles:
   helix:
@@ -48,3 +38,6 @@ clink_layout:
     - rparen
     - symbol
 
+username: root
+
+vivid_theme: ferris

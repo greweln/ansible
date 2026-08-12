@@ -1,0 +1,5 @@
+- name: Set COLORTERM
+  ansible.builtin.copy:
+    dest: /etc/profile.d/truecolor.sh
+    mode: '0644'
+    content: 'export COLORTERM=true'

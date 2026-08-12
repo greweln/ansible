@@ -1,0 +1,5 @@
+- name: Deploy aliases for bashrc
+  blockinfile:
+    path: "{{ username }}/.bashrc"
+    block: "{{ lookup('file', 'aliases') }}"
+    marker: "# {mark} ANSIBLE MANAGED "

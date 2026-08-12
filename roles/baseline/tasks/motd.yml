@@ -1,0 +1,6 @@
+---
+
+- name: Remove default MOTDs
+  ansible.builtin.file:
+    path: /etc/motd.d
+    state: absent

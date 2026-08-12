@@ -13,3 +13,4 @@
     # Set permissive SELinux
     - role: selinux
       tags: selinux
+

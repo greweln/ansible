@@ -1,0 +1,6 @@
+---
+
+- name: Configure baseline
+  hosts: all
+  roles:
+    - role: baseline
